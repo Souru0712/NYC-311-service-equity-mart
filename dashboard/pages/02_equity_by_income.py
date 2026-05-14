@@ -113,11 +113,24 @@ GROUP BY tract_geoid, complaint_type, borough
 """
 scatter_df = run_query(scatter_sql)
 st.plotly_chart(scatter_income_vs_wait(scatter_df), use_container_width=True)
+_AMBIGUOUS_TYPES = {
+    "UNSPECIFIED", "GENERAL", "MISCELLANEOUS CATEGORIES", "INTERNAL CODE",
+    "OTHER ENFORCEMENT", "QUALITY OF LIFE",
+}
+_ambiguous_note = (
+    f" ⚠️ **{selected_complaint}** complaints had no specific category assigned at filing — "
+    "this group is a mix of unrelated issue types handled by different agencies. "
+    "The P90 for each tract reflects whatever happened to be filed as unspecified there, "
+    "not a single service category. Any income pattern shown should not be interpreted "
+    "as a specific agency's equity gap."
+    if selected_complaint in _AMBIGUOUS_TYPES else ""
+)
 st.caption(
     f"Each dot is one census tract's median income vs its P90 response time for **{selected_complaint}**. "
     "A downward slope (higher income → lower P90) confirms an income-driven equity gap for this complaint type and its responsible agency. "
     "A flat line means income has little effect — geography or other factors may explain the variance. "
     "Wide vertical spread at any income level means high inconsistency within that income band."
+    + _ambiguous_note
 )
 st.info(
     "💡 **Filter by borough:** Click a borough name in the legend to hide it. "
