@@ -43,6 +43,7 @@ You also need accounts for:
 - **Snowflake** — 30-day free trial at [snowflake.com](https://signup.snowflake.com/)
 - **NYC Open Data (Socrata)** — free app token at [data.cityofnewyork.us](https://data.cityofnewyork.us/login)
 - **US Census API** — free key at [api.census.gov/data/key_signup.html](https://api.census.gov/data/key_signup.html)
+- **Groq** — free API key at [console.groq.com](https://console.groq.com) (AI synthesis, no credit card required)
 
 ---
 
@@ -161,6 +162,9 @@ cp dashboard/.streamlit/secrets.toml.example .streamlit/secrets.toml
 Edit the file:
 
 ```toml
+# Top-level keys must appear BEFORE any [section] header in TOML
+GROQ_API_KEY = "gsk_..."
+
 [snowflake]
 account   = "abc12345.us-east-1"
 user      = "your_user"
@@ -543,7 +547,65 @@ Open **http://localhost:8501** in your browser.
 
 ---
 
-## 12. Project Structure
+## 12. AI Synthesis
+
+The **Key Findings** page includes an AI-generated root-cause assessment and actionable recommendations, produced by [Groq](https://console.groq.com) (free tier, no credit card required) using the `llama-3.3-70b-versatile` model.
+
+### How it works
+
+The synthesis is generated **once per unique dataset** and stored permanently in Snowflake. Page loads, server restarts, and multiple concurrent users all read from Snowflake — Groq is never called more than once per pipeline run.
+
+```
+Page load
+  └─► query MARTS.AI_SYNTHESIS_CACHE (data_hash)
+        ├─ complete row found → display synthesis, no API call
+        ├─ pending row found  → "being generated" message, no API call
+        └─ no row             → show "Generate AI Analysis" button
+
+Button click
+  └─► INSERT pending row (distributed lock — only one session wins)
+        └─► call Groq API (one request)
+              └─► UPDATE row to complete with synthesis text
+                    └─► st.rerun() → page reads complete row → button gone
+```
+
+`data_hash` is an MD5 of the three findings (complaint-type gaps, borough × quintile heatmap, equity trend). When the pipeline loads new data the hash changes, a new row is needed, and the button reappears once.
+
+### Setup
+
+1. Get a free API key at [console.groq.com](https://console.groq.com) → **API Keys** → **Create API Key**
+
+2. Add it to `.streamlit/secrets.toml` **above** the `[snowflake]` section (TOML parses keys after a section header as belonging to that section):
+
+```toml
+GROQ_API_KEY = "gsk_..."
+
+[snowflake]
+account   = "..."
+...
+```
+
+3. Create the cache table in Snowflake (the app also creates it automatically on startup):
+
+```sql
+CREATE TABLE IF NOT EXISTS MARTS.AI_SYNTHESIS_CACHE (
+    data_hash      VARCHAR PRIMARY KEY,
+    status         VARCHAR DEFAULT 'pending',
+    synthesis_text VARCHAR,
+    generated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+4. Launch the dashboard, navigate to **Key Findings**, and click **Generate AI Analysis**. The button disappears after the first successful generation and the synthesis persists indefinitely.
+
+### Quota
+
+Groq free tier: **30 requests per minute**, resets every minute. At most one request per pipeline run means the free tier is never exhausted under normal operation.
+
+---
+
+## 13. Project Structure
+
 
 ```
 nyc-311-service-equity-mart/
@@ -645,7 +707,7 @@ RAW.ACS_DEMOGRAPHICS
 
 ---
 
-## 14. Troubleshooting
+## 15. Troubleshooting
 
 **`COPY INTO` returns 0 rows**
 - Check the external stage: `SHOW STAGES IN SCHEMA NYC_311.RAW;`
