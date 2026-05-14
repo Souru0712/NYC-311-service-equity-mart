@@ -1,0 +1,17 @@
+name: dim_tract_checkpoint
+config_version: 1.0
+class_name: Checkpoint
+run_name_template: "%Y%m%d-%H%M%S-dim-tract"
+validations:
+  - batch_request:
+      datasource_name: snowflake_nyc311
+      data_connector_name: default_configured_data_connector_name
+      data_asset_name: MARTS.DIM_TRACT
+    expectation_suite_name: dim_tract
+action_list:
+  - name: store_validation_result
+    action:
+      class_name: StoreValidationResultAction
+  - name: update_data_docs
+    action:
+      class_name: UpdateDataDocsAction

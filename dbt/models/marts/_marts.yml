@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: dim_tract
+    description: One row per NYC census tract — ACS demographics, income quintile.
+    columns:
+      - name: tract_geoid
+        tests:
+          - unique
+          - not_null
+      - name: income_quintile
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+
+  - name: fct_request_response_time
+    description: >
+      Atomic fact table. One row per closed 311 request with a matched census tract.
+      response_time_hours = DATEDIFF(hour, created_at, closed_at).
+    columns:
+      - name: unique_key
+        tests:
+          - unique
+          - not_null
+      - name: response_time_hours
+        tests:
+          - not_null
+      - name: tract_geoid
+        tests:
+          - not_null
+
+  - name: fct_equity_splits
+    description: >
+      Aggregated equity fact. Grain: complaint_type × tract × month.
+      equity_score = tract p90 / city-wide p90 for that complaint type and month.
+      Score > 1.0 means slower-than-average service in that tract.
+    columns:
+      - name: tract_geoid
+        tests:
+          - not_null
+      - name: complaint_type
+        tests:
+          - not_null
+      - name: request_month
+        tests:
+          - not_null
+      - name: p50_hours
+        tests:
+          - not_null
+      - name: request_count
+        tests:
+          - not_null
+      - name: income_quintile
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [tract_geoid, complaint_type, request_month]

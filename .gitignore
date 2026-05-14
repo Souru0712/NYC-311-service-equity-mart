@@ -1,0 +1,26 @@
+.env
+**/profiles.yml
+dashboard/.streamlit/secrets.toml
+.streamlit/secrets.toml
+ingestion/data/nyc_tracts.geojson
+
+# dbt
+target/
+dbt_packages/
+dbt/logs/
+
+# Great Expectations
+great_expectations/uncommitted/
+great_expectations/uncommitted/config_variables.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# Airflow
+airflow/logs/
+airflow.db

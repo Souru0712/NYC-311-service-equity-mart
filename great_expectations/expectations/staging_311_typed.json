@@ -1,0 +1,44 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "staging_311_typed",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "unique_key"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "kwargs": {"column": "latitude", "type_": "FLOAT"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_of_type",
+      "kwargs": {"column": "created_at", "type_": "TIMESTAMP_NTZ"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "latitude",
+        "min_value": 40.4,
+        "max_value": 41.0,
+        "mostly": 0.9
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_in_set",
+      "kwargs": {
+        "column": "borough",
+        "value_set": [null, ""],
+        "mostly": 0.95
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.18.12"
+  }
+}

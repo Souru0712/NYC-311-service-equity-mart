@@ -1,0 +1,17 @@
+name: staging_311_typed_checkpoint
+config_version: 1.0
+class_name: Checkpoint
+run_name_template: "%Y%m%d-%H%M%S-staging-311"
+validations:
+  - batch_request:
+      datasource_name: snowflake_nyc311
+      data_connector_name: default_configured_data_connector_name
+      data_asset_name: STAGING.STG_311_REQUESTS
+    expectation_suite_name: staging_311_typed
+action_list:
+  - name: store_validation_result
+    action:
+      class_name: StoreValidationResultAction
+  - name: update_data_docs
+    action:
+      class_name: UpdateDataDocsAction

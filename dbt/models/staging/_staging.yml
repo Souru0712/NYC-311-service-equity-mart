@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: stg_311_requests
+    description: Cleaned and typed 311 service requests. One row per unique_key (latest version).
+    columns:
+      - name: unique_key
+        tests:
+          - unique
+          - not_null
+      - name: borough
+        tests:
+          - not_null:
+              severity: warn
+          - accepted_values:
+              values: ['BRONX', 'BROOKLYN', 'MANHATTAN', 'QUEENS', 'STATEN ISLAND', 'UNSPECIFIED']
+              severity: warn
+      - name: created_at
+        tests:
+          - not_null
+
+  - name: stg_acs_demographics
+    description: ACS 5-Year tract demographics. One row per NYC census tract.
+    columns:
+      - name: tract_geoid
+        tests:
+          - unique
+          - not_null
+      - name: median_household_income
+        tests:
+          - not_null:
+              severity: warn

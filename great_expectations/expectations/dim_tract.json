@@ -1,0 +1,43 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "dim_tract",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {"column": "tract_geoid"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "tract_geoid"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "median_household_income"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {"column": "median_household_income", "min_value": 1},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": {"min_value": 2100, "max_value": 2500},
+      "meta": {"notes": "NYC 2020 Census has ~2168 land tracts; ACS API returns 2300-2400 including water-only and special tracts"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {"column": "pct_below_poverty", "min_value": 0, "max_value": 100},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {"column": "income_quintile", "value_set": [1, 2, 3, 4, 5]},
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {"great_expectations_version": "0.18.12"}
+}

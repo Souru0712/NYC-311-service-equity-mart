@@ -1,0 +1,63 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "raw_311_socrata",
+  "expectations": [
+    {
+      "expectation_type": "expect_table_columns_to_match_set",
+      "kwargs": {
+        "column_set": [
+          "unique_key", "created_date", "closed_date",
+          "resolution_action_updated_date", "agency", "complaint_type",
+          "borough", "latitude", "longitude", "tract_geoid",
+          "status", "ingestion_timestamp"
+        ],
+        "exact_match": false
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "unique_key"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {"column": "unique_key"},
+      "meta": {"notes": "Raw layer may have dupes from 48h overlap — warn only"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {"column": "created_date"},
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "latitude",
+        "min_value": 40.4,
+        "max_value": 41.0,
+        "mostly": 0.9
+      },
+      "meta": {"notes": "NYC bounding box; ~5% of records lack coordinates"}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "longitude",
+        "min_value": -74.3,
+        "max_value": -73.7,
+        "mostly": 0.9
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": {"min_value": 1, "max_value": null},
+      "meta": {"notes": "Catches empty pulls — likely a Socrata API failure"}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.18.12"
+  }
+}

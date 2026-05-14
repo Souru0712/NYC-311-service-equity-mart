@@ -1,0 +1,86 @@
+config_version: 3.0
+
+config_variables_file_path: uncommitted/config_variables.yml
+
+# Datasource is added programmatically in scripts/run_ge_checkpoint.py
+# and in each Airflow DAG — not here — so the password is URL-encoded safely.
+datasources:
+  snowflake_nyc311:
+    class_name: Datasource
+    module_name: great_expectations.datasource
+    execution_engine:
+      class_name: SqlAlchemyExecutionEngine
+      module_name: great_expectations.execution_engine
+      connection_string: 
+        snowflake://oscar:L%40l232393025@LOBAFKM-BC56375/NYC_311/RAW?warehouse=COMPUTE_WH&role=TRANSFORMER
+    data_connectors:
+      default_configured_data_connector_name:
+        class_name: ConfiguredAssetSqlDataConnector
+        module_name: great_expectations.datasource.data_connector
+        assets:
+          RAW.SOCRATA_311:
+            class_name: Asset
+            module_name: great_expectations.datasource.data_connector.asset
+            schema_name: RAW
+            table_name: SOCRATA_311
+          STAGING.STG_311_REQUESTS:
+            class_name: Asset
+            module_name: great_expectations.datasource.data_connector.asset
+            schema_name: STAGING
+            table_name: STG_311_REQUESTS
+          MARTS.FCT_EQUITY_SPLITS:
+            class_name: Asset
+            module_name: great_expectations.datasource.data_connector.asset
+            schema_name: MARTS
+            table_name: FCT_EQUITY_SPLITS
+          MARTS.DIM_TRACT:
+            class_name: Asset
+            module_name: great_expectations.datasource.data_connector.asset
+            schema_name: MARTS
+            table_name: DIM_TRACT
+stores:
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: expectations/
+
+  validations_store:
+    class_name: ValidationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
+      base_directory: checkpoints/
+
+  evaluation_parameter_store:
+    class_name: EvaluationParameterStore
+expectations_store_name: expectations_store
+validations_store_name: validations_store
+checkpoint_store_name: checkpoint_store
+evaluation_parameter_store_name: evaluation_parameter_store
+
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    show_how_to_buttons: false
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
+
+anonymous_usage_statistics:
+  data_context_id: 24bec27c-4542-4eb5-91a3-76e37437aa25
+  enabled: false
+plugins_directory:
+notebooks:
+include_rendered_content:
+  globally: false
+  expectation_suite: false
+  expectation_validation_result: false

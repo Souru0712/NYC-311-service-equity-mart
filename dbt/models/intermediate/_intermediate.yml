@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: int_311_with_response_time
+    description: >
+      Incremental merge model. One row per 311 request (open or closed).
+      response_time_hours is populated once closed_at is set — records get updated
+      on subsequent runs when they close days after creation.
+    columns:
+      - name: unique_key
+        tests:
+          - unique
+          - not_null
+      - name: response_time_hours
+        tests:
+          - not_null:
+              severity: warn
