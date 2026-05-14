@@ -89,6 +89,13 @@ st.plotly_chart(
     ),
     use_container_width=True,
 )
+st.caption(
+    "**Avg equity score** = the mean of all tract equity scores within that income quintile. "
+    "Each tract's equity score is its own P90 divided by the median tract P90 citywide — "
+    "so averaging them across a quintile gives a single number representing how that income group "
+    "performs relative to the typical NYC neighborhood. "
+    "A score of 1.0 means the quintile matches the median tract. Above 1.0 means slower. Below 1.0 means faster."
+)
 
 scatter_sql = f"""
 SELECT
@@ -106,6 +113,12 @@ GROUP BY tract_geoid, complaint_type, borough
 """
 scatter_df = run_query(scatter_sql)
 st.plotly_chart(scatter_income_vs_wait(scatter_df), use_container_width=True)
+st.caption(
+    f"Each dot is one census tract's median income vs its P90 response time for **{selected_complaint}**. "
+    "A downward slope (higher income → lower P90) confirms an income-driven equity gap for this complaint type and its responsible agency. "
+    "A flat line means income has little effect — geography or other factors may explain the variance. "
+    "Wide vertical spread at any income level means high inconsistency within that income band."
+)
 st.info(
     "💡 **Filter by borough:** Click a borough name in the legend to hide it. "
     "Double-click a borough name to isolate it and hide all others. "

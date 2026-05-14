@@ -71,6 +71,27 @@ st.plotly_chart(
     use_container_width=True,
 )
 
+_metric_explanations = {
+    "p90_hours": (
+        "🔴 **Red = longer resolution time** in that borough for this complaint type. "
+        "A dark red cell means the worst-served 10% of residents waited a very long time — "
+        "a genuine service problem worth investigating. "
+        "🟢 **Green = resolves quickly.**"
+    ),
+    "p50_hours": (
+        "🔴 **Red = longer median resolution time** — the *typical* resident in that borough "
+        "waited a long time for this complaint type to be resolved. "
+        "🟢 **Green = typical resident resolved quickly.**"
+    ),
+    "complaint_count": (
+        "🔴 **Red = high complaint volume** filed in that borough for this type. "
+        "This reflects demand, not service quality — a red cell here does not mean slow service, "
+        "it may simply reflect population density or a known local issue. "
+        "🟢 **Green = fewer complaints filed.**"
+    ),
+}
+st.caption(_metric_explanations[metric])
+
 top10 = (
     df.groupby("complaint_type")
     .agg(total_complaints=("complaint_count", "sum"), avg_equity=("avg_equity_score", "mean"))
@@ -88,3 +109,14 @@ fig = px.bar(
     labels={"total_complaints": "Total Complaints", "avg_equity": "Avg Equity Score"},
 )
 st.plotly_chart(fig, use_container_width=True)
+
+st.caption(
+    "Bar length = total complaints filed citywide. "
+    "Bar color = average equity score across all tracts for that complaint type. "
+    "🔴 **Red = equity score well above 1.0** — lower-income tracts wait significantly longer "
+    "than the typical NYC neighborhood for this type, pointing to an agency response disparity. "
+    "🟢 **Green = equity score near 1.0** — service is distributed relatively evenly across "
+    "neighborhoods regardless of income. "
+    "High-volume bars that are red are the highest-priority equity issues — "
+    "they affect the most residents and the service gap is the largest."
+)
