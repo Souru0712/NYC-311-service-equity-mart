@@ -26,11 +26,18 @@ def scatter_income_vs_wait(df: pd.DataFrame):
 
 def complaint_heatmap(df: pd.DataFrame, value_col: str):
     pivot = df.pivot_table(index="complaint_type", columns="borough", values=value_col, aggfunc="mean")
+    # 30px per row so all complaint types are visible without zooming
+    height = max(500, len(pivot) * 30)
     fig = px.imshow(
         pivot,
         aspect="auto",
         color_continuous_scale="RdYlGn_r",
         title=f"{value_col} by Complaint Type and Borough",
         labels={"color": value_col},
+        height=height,
+    )
+    fig.update_layout(
+        yaxis={"tickfont": {"size": 11}},
+        xaxis={"tickfont": {"size": 12}},
     )
     return fig

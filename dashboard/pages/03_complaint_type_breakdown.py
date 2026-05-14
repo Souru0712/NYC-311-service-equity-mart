@@ -3,26 +3,29 @@ import streamlit as st
 
 from utils.snowflake_conn import run_query
 from utils.chart_helpers import complaint_heatmap
+from utils.styles import inject_css
+
+inject_css()
 
 st.header("Complaint Type Breakdown by Borough")
 
 with st.expander("How to read this page"):
     st.markdown("""
     **What you're looking at:**
-    This page shows how 311 complaint types distribute across NYC's five boroughs — and how
+    This page shows how all 311 complaint types distribute across NYC's five boroughs — and how
     response times and equity vary by category and location.
 
-    **Heatmap — Top 20 Complaint Types × Borough:**
-    - Rows = the 20 highest-volume complaint types citywide
+    **Heatmap — All Complaint Types × Borough:**
+    - Rows = every complaint type in the dataset (scroll down to see all)
     - Columns = the 5 NYC boroughs
     - Cell color = the selected metric for that complaint type in that borough
     - Toggle the metric using the radio buttons above the chart:
         - **p90_hours** — 90th percentile response time (worst-case experience)
         - **p50_hours** — median response time (typical experience)
         - **complaint_count** — total number of complaints
-    - Darker red = higher value. A dark cell at the intersection of a complaint type and borough
-      means that category takes particularly long (or has high volume) in that borough
-    - Comparing a row across boroughs reveals whether a specific complaint type is handled
+    - Darker red = higher value. A dark cell means that category takes particularly long
+      (or has high volume) in that borough
+    - Comparing a row across boroughs reveals whether a complaint type is handled
       consistently or has geographic disparities
 
     **Bar chart — Top 10 Complaint Types by Volume:**
@@ -33,8 +36,8 @@ with st.expander("How to read this page"):
     - High-volume complaint types with red bars are the highest-priority equity issues —
       they affect many residents and the service gap is large
 
-    **Tip:** Sort the heatmap by switching to `complaint_count` first to identify which categories
-    dominate in each borough, then switch to `p90_hours` to see which ones are slowest.
+    **Tip:** Switch to `complaint_count` to identify the highest-volume categories per borough,
+    then switch to `p90_hours` to see which ones are the slowest to resolve.
     """)
 
 sql = """
@@ -60,13 +63,9 @@ metric = st.radio(
     horizontal=True,
 )
 
-top_complaints = (
-    df.groupby("complaint_type")["complaint_count"].sum()
-    .nlargest(20)
-    .index.tolist()
-)
+# Show all complaint types — height scales automatically in chart_helpers
 st.plotly_chart(
-    complaint_heatmap(df[df["complaint_type"].isin(top_complaints)], metric),
+    complaint_heatmap(df, metric),
     use_container_width=True,
 )
 

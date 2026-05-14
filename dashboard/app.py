@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from utils.snowflake_conn import run_query
+from utils.styles import inject_css
 
 BACK_TO_TOP = '[↑ Back to top](#top)'
 
@@ -13,12 +14,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Push content above the Streamlit toolbar so nothing gets covered
-st.markdown("""
-    <style>
-        .block-container { padding-bottom: 5rem; }
-    </style>
-""", unsafe_allow_html=True)
+inject_css()
 
 st.markdown('<a name="top"></a>', unsafe_allow_html=True)
 st.title("NYC 311 Service Equity Dashboard")
@@ -28,6 +24,27 @@ st.markdown("""
 This dashboard investigates whether New York City responds to resident complaints at the same
 speed regardless of neighborhood wealth. The short answer — it doesn't always.
 """)
+
+# ── Hero stats ────────────────────────────────────────────────────────────────
+col1, col2, col3 = st.columns(3)
+col1.markdown("""
+<div class="hero-stat">
+  <div class="number">3M+</div>
+  <div class="label">311 requests per year</div>
+</div>
+""", unsafe_allow_html=True)
+col2.markdown("""
+<div class="hero-stat">
+  <div class="number">2,168</div>
+  <div class="label">Census tracts analyzed</div>
+</div>
+""", unsafe_allow_html=True)
+col3.markdown("""
+<div class="hero-stat">
+  <div class="number">2020–now</div>
+  <div class="label">Dataset coverage</div>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 **On this page:**
@@ -456,10 +473,6 @@ incomes tend to wait longer for the same types of complaints to be resolved comp
 neighborhoods — even when the complaints are identical. This is a **service equity** problem.
 """)
 
-col1, col2, col3 = st.columns(3)
-col1.metric("311 requests per year", "~3 million", "across all 5 boroughs")
-col2.metric("NYC census tracts analyzed", "~2,168", "neighborhood-level units")
-col3.metric("Dataset coverage", "2020–present", "updated daily")
 
 st.markdown(BACK_TO_TOP)
 st.divider()

@@ -3,6 +3,9 @@ import plotly.express as px
 import streamlit as st
 
 from utils.snowflake_conn import run_query
+from utils.styles import inject_css
+
+inject_css()
 
 # ── Claude synthesis ──────────────────────────────────────────────────────────
 _SYNTHESIS_SYSTEM = """\
@@ -491,9 +494,12 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     cached = _load_cached_synthesis(data_hash)
 
     if cached and cached[0] == "complete":
-        # Stored and ready — display directly, clear any leftover session state
+        # Stored and ready — display in styled callout box
         st.session_state.pop("synthesis", None)
-        st.markdown(cached[1])
+        st.markdown(
+            f'<div class="synthesis-box">{cached[1]}</div>',
+            unsafe_allow_html=True,
+        )
 
     elif cached and cached[0] == "pending":
         # Another user already clicked — don't call Groq again

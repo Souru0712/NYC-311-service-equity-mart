@@ -2,6 +2,9 @@ import streamlit as st
 
 from utils.snowflake_conn import run_query
 from utils.chart_helpers import equity_bar, scatter_income_vs_wait
+from utils.styles import inject_css
+
+inject_css()
 
 st.header("Equity Score by Income Quintile")
 
@@ -32,7 +35,7 @@ with st.expander("How to read this page"):
     - Each dot is one census tract
     - X axis = median household income of the tract
     - Y axis = P90 response time in hours
-    - Color = borough
+    - Color = borough — **click a borough in the legend to show/hide it; double-click to isolate**
     - Size = number of complaints in that tract
     - A downward slope (higher income → lower wait time) confirms the equity pattern
     - Outlier dots far above the trend are tracts with unusually slow service worth investigating
@@ -96,6 +99,11 @@ GROUP BY tract_geoid, complaint_type, borough
 """
 scatter_df = run_query(scatter_sql)
 st.plotly_chart(scatter_income_vs_wait(scatter_df), use_container_width=True)
+st.info(
+    "💡 **Filter by borough:** Click a borough name in the legend to hide it. "
+    "Double-click a borough name to isolate it and hide all others. "
+    "Click again to restore."
+)
 
 st.caption(
     "Income quintile 1 = lowest income, 5 = highest. "
