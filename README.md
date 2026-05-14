@@ -1,4 +1,4 @@
-# NYC 311 Service Equity Mart
+# NYC 311 Service Equity
 
 > **If you live in Brownsville vs the Upper East Side, does the city respond to your 311 calls at the same speed?**
 
