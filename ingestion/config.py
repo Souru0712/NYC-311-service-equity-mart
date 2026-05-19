@@ -8,7 +8,7 @@ load_dotenv()
 @dataclass
 class Config:
     socrata_app_token: str = field(default_factory=lambda: os.environ["SOCRATA_APP_TOKEN"])
-    socrata_dataset_id: str = field(default_factory=lambda: os.getenv("SOCRATA_DATASET_ID", "erm2-nwe9"))
+    socrata_dataset_id: str = field(default_factory=lambda: os.getenv("SOCRATA_DATASET_ID") or "erm2-nwe9")
 
     aws_access_key: str = field(default_factory=lambda: os.environ["AWS_ACCESS_KEY_ID"])
     aws_secret_key: str = field(default_factory=lambda: os.environ["AWS_SECRET_ACCESS_KEY"])
