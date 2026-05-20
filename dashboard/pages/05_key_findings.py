@@ -301,14 +301,15 @@ volume_clause = "AND total_requests >= 500" if min_volume_filter else ""
 
 f1_sort = st.radio(
     "Order by",
-    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc"],
+    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc", "Total requests desc, then gap desc"],
     horizontal=True,
     key="f1_sort",
 )
 f1_order = {
-    "Gap desc":                              "equity_gap DESC",
-    "Total requests desc":                   "total_requests DESC",
-    "Gap desc, then total requests desc":    "equity_gap DESC, total_requests DESC",
+    "Gap desc":                                    "equity_gap DESC",
+    "Total requests desc":                         "total_requests DESC",
+    "Gap desc, then total requests desc":          "equity_gap DESC, total_requests DESC",
+    "Total requests desc, then gap desc":          "total_requests DESC, equity_gap DESC",
 }[f1_sort]
 
 gap_sql = f"""

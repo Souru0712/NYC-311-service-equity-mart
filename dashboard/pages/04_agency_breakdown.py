@@ -174,13 +174,14 @@ if agency_df.empty:
 # ── Sort control ──────────────────────────────────────────────────────────────
 sort_by = st.radio(
     "Order by",
-    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc"],
+    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc", "Total requests desc, then gap desc"],
     horizontal=True,
 )
 _sort_cols = {
-    "Gap desc":                           ["gap"],
-    "Total requests desc":                ["total_requests"],
-    "Gap desc, then total requests desc": ["gap", "total_requests"],
+    "Gap desc":                                    ["gap"],
+    "Total requests desc":                         ["total_requests"],
+    "Gap desc, then total requests desc":          ["gap", "total_requests"],
+    "Total requests desc, then gap desc":          ["total_requests", "gap"],
 }[sort_by]
 
 agency_df = agency_df.sort_values(_sort_cols, ascending=False)
