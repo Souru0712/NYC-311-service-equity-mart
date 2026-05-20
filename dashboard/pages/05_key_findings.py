@@ -420,24 +420,36 @@ thin-data outliers). A larger gap means the city's response is *more unequal* fo
 complaint type. The **Agency** column identifies who is accountable for closing it.
 """)
 
-min_volume_filter = st.checkbox(
-    "Only show complaint types with 500+ total requests",
-    value=True,
-    help="Excludes low-volume types (e.g. Cranes & Derricks: 191 requests) whose equity gap "
-         "is statistically unreliable and skews the chart.",
-)
-volume_clause = "AND total_requests >= 500" if min_volume_filter else ""
-
+# Default sort: Total requests desc — so the noise cluster (1.7M+ Q1 requests)
+# floats to the top visually. Gap desc is available but ranks thin-volume
+# dramatic numbers above high-confidence findings, inverting analytical priority.
 f1_sort = st.radio(
     "Order by",
-    ["Gap desc", "Total requests desc"],
+    ["Total requests desc", "Gap desc"],
     horizontal=True,
     key="f1_sort",
+    help="Default: highest-volume findings first (noise cluster leads). "
+         "Switch to Gap desc to see the largest ratios -- but note thin-volume "
+         "types (Street Sign n=535, Animal in a Park n=857) will top that ranking.",
 )
 f1_order = {
-    "Gap desc":            "q1_over_q5_gap DESC",
     "Total requests desc": "(q1_n_complaints + q5_n_complaints) DESC",
+    "Gap desc":            "q1_over_q5_gap DESC",
 }[f1_sort]
+
+# Display floor: hide thin-volume types by default so the chart's visual
+# ordering matches analytical confidence, not just gap magnitude.
+# FCT_EQUITY_GAP_BY_TYPE already enforces bilateral >=500; this adds a
+# higher display-only threshold to remove Street Sign (535) and Animal in
+# a Park (857) from the default view.
+show_thin = st.checkbox(
+    "Include lower-volume complaint types (Q1 < 5,000 requests)",
+    value=False,
+    help="When unchecked, hides types like Street Sign - Damaged (535 Q1 requests) "
+         "and Animal in a Park (857) whose gaps are real but carry less confidence "
+         "than the noise cluster (1.7M+ requests). The model's bilateral >=500 "
+         "floor still applies regardless.",
+)
 
 # Read from FCT_EQUITY_GAP_BY_TYPE -- the single canonical gap source.
 # Volume guard (>=500 per quintile) is built into that table; the checkbox
@@ -459,6 +471,8 @@ with st.spinner("Loading Finding 1..."):
     gap_df = run_query(gap_sql)
 
 if not gap_df.empty:
+    if not show_thin:
+        gap_df = gap_df[gap_df["q1_n_complaints"] >= 5000].reset_index(drop=True)
     gap_df["agency"] = gap_df["complaint_type"].map(_AGENCY).fillna("Various")
 
     _f1_chart_col = "total_requests" if f1_sort == "Total requests desc" else "q1_over_q5_gap"
