@@ -1,5 +1,9 @@
+import os
 import re
+import sys
 from datetime import date
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from groq import Groq
 import plotly.express as px
@@ -304,15 +308,13 @@ volume_clause = "AND total_requests >= 500" if min_volume_filter else ""
 
 f1_sort = st.radio(
     "Order by",
-    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc", "Total requests desc, then gap desc"],
+    ["Gap desc", "Total requests desc"],
     horizontal=True,
     key="f1_sort",
 )
 f1_order = {
-    "Gap desc":                                    "equity_gap DESC",
-    "Total requests desc":                         "total_requests DESC",
-    "Gap desc, then total requests desc":          "equity_gap DESC, total_requests DESC",
-    "Total requests desc, then gap desc":          "total_requests DESC, equity_gap DESC",
+    "Gap desc":            "equity_gap DESC",
+    "Total requests desc": "total_requests DESC",
 }[f1_sort]
 
 gap_sql = f"""
@@ -344,8 +346,7 @@ gap_df = run_query(gap_sql)
 if not gap_df.empty:
     gap_df["agency"] = gap_df["complaint_type"].map(_AGENCY).fillna("Various")
 
-    # Chart sort: ascending so plotly renders largest at top; primary col drives visual order
-    _f1_chart_col = "total_requests" if f1_sort.startswith("Total") else "equity_gap"
+    _f1_chart_col = "total_requests" if f1_sort == "Total requests desc" else "equity_gap"
     fig = px.bar(
         gap_df.sort_values(_f1_chart_col, ascending=True),
         x="equity_gap",

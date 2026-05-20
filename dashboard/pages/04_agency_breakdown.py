@@ -179,20 +179,14 @@ if agency_df.empty:
 # ── Sort control ──────────────────────────────────────────────────────────────
 sort_by = st.radio(
     "Order by",
-    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc", "Total requests desc, then gap desc"],
+    ["Gap desc", "Total requests desc"],
     horizontal=True,
 )
-_sort_cols = {
-    "Gap desc":                                    ["gap"],
-    "Total requests desc":                         ["total_requests"],
-    "Gap desc, then total requests desc":          ["gap", "total_requests"],
-    "Total requests desc, then gap desc":          ["total_requests", "gap"],
-}[sort_by]
 
-# Table: descending (largest first)
-agency_table = agency_df.sort_values(_sort_cols, ascending=False)
-# Chart: ascending so plotly renders largest at top of horizontal bar
-agency_chart = agency_df.sort_values(_sort_cols, ascending=True)
+_sort_col = {"Gap desc": "gap", "Total requests desc": "total_requests"}[sort_by]
+
+agency_table = agency_df.sort_values(_sort_col, ascending=False)
+agency_chart = agency_df.sort_values(_sort_col, ascending=True)
 
 # ── Bar chart — equity gap by agency ─────────────────────────────────────────
 fig = px.bar(
