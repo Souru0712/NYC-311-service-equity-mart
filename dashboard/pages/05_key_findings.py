@@ -190,13 +190,17 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
         # Sanitize to latin-1 — replaces any character Helvetica cannot encode.
         return text.encode("latin-1", errors="replace").decode("latin-1")
 
+    from fpdf.enums import WrapMode
+
     pdf = FPDF()
     pdf.set_margins(20, 20, 20)
     pdf.add_page()
 
+    _wm = WrapMode.CHAR  # break at character boundary if a word is too wide
+
     # Header block
     pdf.set_font("Helvetica", "B", 18)
-    pdf.multi_cell(0, 10, _s("NYC 311 Service Equity Report"))
+    pdf.multi_cell(0, 10, _s("NYC 311 Service Equity Report"), wrapmode=_wm)
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(0, 6, _s(f"Generated: {date.today().strftime('%B %d, %Y')}"))
     pdf.ln(5)
@@ -218,26 +222,26 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
             heading = line.strip("*").strip()
             pdf.set_font("Helvetica", "B", 12)
             pdf.ln(3)
-            pdf.multi_cell(0, 7, _s(heading))
+            pdf.multi_cell(0, 7, _s(heading), wrapmode=_wm)
             pdf.ln(1)
             continue
 
         # Numbered list item
         if len(line) > 2 and line[0].isdigit() and line[1] in ".)":
             pdf.set_font("Helvetica", "", 10)
-            pdf.multi_cell(0, 6, _s(line))
+            pdf.multi_cell(0, 6, _s(line), wrapmode=_wm)
             continue
 
         # Bullet list
         if line.startswith("- ") or line.startswith("* "):
             pdf.set_font("Helvetica", "", 10)
-            pdf.multi_cell(0, 6, _s("- " + line[2:]))
+            pdf.multi_cell(0, 6, _s("- " + line[2:]), wrapmode=_wm)
             continue
 
         # Strip inline bold markers for body text
         line = line.replace("**", "")
         pdf.set_font("Helvetica", "", 10)
-        pdf.multi_cell(0, 6, _s(line))
+        pdf.multi_cell(0, 6, _s(line), wrapmode=_wm)
 
     return bytes(pdf.output())
 
