@@ -184,11 +184,14 @@ _sort_cols = {
     "Total requests desc, then gap desc":          ["total_requests", "gap"],
 }[sort_by]
 
-agency_df = agency_df.sort_values(_sort_cols, ascending=False)
+# Table: descending (largest first)
+agency_table = agency_df.sort_values(_sort_cols, ascending=False)
+# Chart: ascending so plotly renders largest at top of horizontal bar
+agency_chart = agency_df.sort_values(_sort_cols, ascending=True)
 
 # ── Bar chart — equity gap by agency ─────────────────────────────────────────
 fig = px.bar(
-    agency_df,
+    agency_chart,
     x="gap",
     y="Agency",
     color="gap",
@@ -223,19 +226,13 @@ st.caption(
 # ── Summary table ─────────────────────────────────────────────────────────────
 st.markdown("**Agency summary table:**")
 st.dataframe(
-    agency_df[["Agency", "total_requests", "q1_avg_equity", "q5_avg_equity", "gap"]]
+    agency_table[["Agency", "total_requests", "q1_avg_equity", "q5_avg_equity", "gap"]]
     .rename(columns={
         "total_requests": "Total Requests",
         "q1_avg_equity":  "Q1 Avg Equity",
         "q5_avg_equity":  "Q5 Avg Equity",
         "gap":            "Gap (Q1 − Q5)",
     })
-    .sort_values(
-        ["Gap (Q1 − Q5)", "Total Requests"] if "total requests" in sort_by.lower() or "then" in sort_by.lower()
-        else ["Gap (Q1 − Q5)"] if "gap" in sort_by.lower()
-        else ["Total Requests"],
-        ascending=False,
-    )
     .reset_index(drop=True),
     use_container_width=True,
 )

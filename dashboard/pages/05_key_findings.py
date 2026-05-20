@@ -344,8 +344,10 @@ gap_df = run_query(gap_sql)
 if not gap_df.empty:
     gap_df["agency"] = gap_df["complaint_type"].map(_AGENCY).fillna("Various")
 
+    # Chart sort: ascending so plotly renders largest at top; primary col drives visual order
+    _f1_chart_col = "total_requests" if f1_sort.startswith("Total") else "equity_gap"
     fig = px.bar(
-        gap_df.sort_values("equity_gap"),
+        gap_df.sort_values(_f1_chart_col, ascending=True),
         x="equity_gap",
         y="complaint_type",
         color="equity_gap",
