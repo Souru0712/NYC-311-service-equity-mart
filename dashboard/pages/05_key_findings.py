@@ -392,7 +392,23 @@ A borough where every cell is red regardless of quintile points to a resource de
 entire area.
 """)
 
-heatmap_sql = """
+_DEFAULT_START = "2020-01-01"
+_DEFAULT_END   = date.today().strftime("%Y-%m-%d")
+_DATE_RE       = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+st.caption("📅 Date range · Format: YYYY-MM-DD · e.g. 2023-01-01")
+_hdc1, _hdc2, _hdc3 = st.columns([2, 2, 1])
+_h_start = _hdc1.text_input("Start date", value=_DEFAULT_START, key="f2_start")
+_h_end   = _hdc2.text_input("End date",   value=_DEFAULT_END,   key="f2_end")
+if _hdc3.button("↺ Reset", key="f2_reset", use_container_width=True):
+    st.session_state.pop("f2_start", None)
+    st.session_state.pop("f2_end",   None)
+    st.rerun()
+
+f2_start = _h_start if _DATE_RE.match(_h_start or "") else _DEFAULT_START
+f2_end   = _h_end   if _DATE_RE.match(_h_end   or "") else _DEFAULT_END
+
+heatmap_sql = f"""
 SELECT
     borough,
     income_quintile,
@@ -400,6 +416,7 @@ SELECT
 FROM MARTS.FCT_EQUITY_SPLITS
 WHERE borough NOT IN ('UNSPECIFIED', '')
   AND income_quintile IS NOT NULL
+  AND request_month BETWEEN '{f2_start}' AND '{f2_end}'
 GROUP BY borough, income_quintile
 ORDER BY borough, income_quintile
 """
