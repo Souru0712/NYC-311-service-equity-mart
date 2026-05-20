@@ -187,7 +187,7 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
     from fpdf import FPDF
 
     def _s(text: str) -> str:
-        “””Sanitize to latin-1 — replaces any character Helvetica can’t encode.”””
+        # Sanitize to latin-1 — replaces any character Helvetica cannot encode.
         return text.encode(“latin-1”, errors=”replace”).decode(“latin-1”)
 
     pdf = FPDF()
