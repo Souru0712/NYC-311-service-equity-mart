@@ -13,6 +13,7 @@ import streamlit as st
 from utils.snowflake_conn import run_query
 from utils.styles import inject_css
 from utils.sidebar import setup_sidebar
+from utils.auth import is_dev
 
 st.set_page_config(page_title="Key Findings | NYC 311", page_icon="🔍", layout="wide")
 inject_css()
@@ -909,6 +910,8 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     # Always check Snowflake first — zero API calls
     cached = _load_cached_synthesis(data_hash)
 
+    _dev = is_dev()
+
     if cached and cached[0] == "complete":
         # Stored and ready — display in styled callout box
         st.session_state.pop("synthesis", None)
@@ -923,6 +926,22 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
             f'<div class="synthesis-box">{synthesis_text}</div>',
             unsafe_allow_html=True,
         )
+
+        # Dev-only: force regenerate even when cached (for testing)
+        if _dev:
+            st.divider()
+            st.caption("🔧 Dev mode")
+            col_regen, col_clear = st.columns(2)
+            if col_regen.button("🔄 Regenerate synthesis", help="Deletes cached row and calls Groq again"):
+                from utils.snowflake_conn import get_snowflake_conn
+                get_snowflake_conn().cursor().execute(
+                    "DELETE FROM MARTS.AI_SYNTHESIS_CACHE WHERE data_hash = %s", (data_hash,)
+                )
+                st.rerun()
+            if col_clear.button("🗑️ Clear all cached syntheses"):
+                from utils.snowflake_conn import get_snowflake_conn
+                get_snowflake_conn().cursor().execute("TRUNCATE TABLE MARTS.AI_SYNTHESIS_CACHE")
+                st.rerun()
 
         # ── Buttons next to the ④ heading — both rendered in one HTML component ──
         import base64 as _b64
@@ -970,11 +989,10 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
             """, height=48)
 
     elif cached and cached[0] == "pending":
-        # Another user already clicked — don't call Groq again
         st.info("Analysis is being generated. Refresh the page in a few seconds to see it.")
 
     else:
-        # No row yet — show the generate button
+        # No cached row — only dev can trigger generation
         prompt = f"""\
 DASHBOARD CONTEXT
 The user is viewing Finding 1 sorted by: {f1_sort}.
@@ -1023,24 +1041,26 @@ High volume + high gap = most urgent intervention needed.
 Produce your full analysis following the framework in your instructions. \
 Be specific, be causal, be actionable.\
 """
-        st.info("No AI synthesis stored yet for the current data.")
-        if st.button("Generate AI Analysis", type="primary"):
-            # Claim the slot first — prevents any concurrent click from also calling Groq
-            claimed = _claim_slot(data_hash)
-            if claimed:
-                with st.spinner("Generating…"):
-                    try:
-                        text = _call_groq(prompt)
-                        _store_synthesis(data_hash, text)
-                        # Rerun now — _load_cached_synthesis will read 'complete'
-                        # from Snowflake, render the synthesis, and skip the button
-                        st.rerun()
-                    except Exception as exc:
-                        # Release the lock so the user can retry
-                        _store_synthesis(data_hash, "")
-                        st.error(f"Groq error: {exc}")
-            else:
-                st.info("Another session is already generating. Refresh in a few seconds.")
+        if _dev:
+            st.info("No AI synthesis cached for this data + sort combination.")
+            if st.button("Generate AI Analysis", type="primary"):
+                claimed = _claim_slot(data_hash)
+                if claimed:
+                    with st.spinner("Generating…"):
+                        try:
+                            text = _call_groq(prompt)
+                            _store_synthesis(data_hash, text)
+                            st.rerun()
+                        except Exception as exc:
+                            _store_synthesis(data_hash, "")
+                            st.error(f"Groq error: {exc}")
+                else:
+                    st.info("Another session is already generating. Refresh in a few seconds.")
+        else:
+            st.info(
+                "AI analysis for this view has not been generated yet. "
+                "Check back later or contact the dashboard administrator."
+            )
 
 else:
     st.info("Run the pipeline to populate findings data.")
