@@ -183,29 +183,35 @@ def _store_synthesis(data_hash: str, text: str) -> None:
 
 
 def _generate_pdf(sort_context: str, body: str) -> bytes:
-    # Render the synthesis markdown as a clean PDF report.
+    # Render the synthesis as a PDF using pre-wrapped lines to avoid fpdf line-break crashes.
+    import textwrap
     from fpdf import FPDF
 
     def _s(text: str) -> str:
-        # Sanitize to latin-1 — replaces any character Helvetica cannot encode.
+        # Sanitize to latin-1 — any unencodable character becomes ?.
         return text.encode("latin-1", errors="replace").decode("latin-1")
 
-    from fpdf.enums import WrapMode
+    def _emit(pdf, text: str, width: int, line_h: float) -> None:
+        # Pre-wrap and emit one cell per wrapped line — bypasses multi_cell entirely.
+        for chunk in textwrap.wrap(text, width=width) or [""]:
+            pdf.cell(0, line_h, _s(chunk))
+            pdf.ln(line_h)
 
     pdf = FPDF()
     pdf.set_margins(20, 20, 20)
     pdf.add_page()
 
-    _wm = WrapMode.CHAR  # break at character boundary if a word is too wide
-
-    # Header block
+    # Title
     pdf.set_font("Helvetica", "B", 18)
-    pdf.multi_cell(0, 10, _s("NYC 311 Service Equity Report"), wrapmode=_wm)
+    pdf.cell(0, 12, _s("NYC 311 Service Equity Report"))
+    pdf.ln(12)
+
+    # Metadata
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(0, 6, _s(f"Generated: {date.today().strftime('%B %d, %Y')}"))
-    pdf.ln(5)
+    pdf.ln(6)
     pdf.cell(0, 6, _s(f"Sort context: {sort_context}"))
-    pdf.ln(8)
+    pdf.ln(10)
     pdf.set_draw_color(180, 180, 180)
     pdf.line(20, pdf.get_y(), 190, pdf.get_y())
     pdf.ln(6)
@@ -217,31 +223,28 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
             pdf.ln(4)
             continue
 
-        # **Section Header** — bold heading
+        # **Section Header**
         if line.startswith("**") and line.endswith("**") and line.count("**") == 2:
-            heading = line.strip("*").strip()
-            pdf.set_font("Helvetica", "B", 12)
             pdf.ln(3)
-            pdf.multi_cell(0, 7, _s(heading), wrapmode=_wm)
-            pdf.ln(1)
+            pdf.set_font("Helvetica", "B", 12)
+            _emit(pdf, line.strip("*").strip(), width=85, line_h=7)
             continue
 
-        # Numbered list item
-        if len(line) > 2 and line[0].isdigit() and line[1] in ".)":
-            pdf.set_font("Helvetica", "", 10)
-            pdf.multi_cell(0, 6, _s(line), wrapmode=_wm)
-            continue
-
-        # Bullet list
+        # Bullet or numbered list
         if line.startswith("- ") or line.startswith("* "):
             pdf.set_font("Helvetica", "", 10)
-            pdf.multi_cell(0, 6, _s("- " + line[2:]), wrapmode=_wm)
+            _emit(pdf, "- " + line[2:], width=88, line_h=6)
             continue
 
-        # Strip inline bold markers for body text
+        if len(line) > 2 and line[0].isdigit() and line[1] in ".)":
+            pdf.set_font("Helvetica", "", 10)
+            _emit(pdf, line, width=88, line_h=6)
+            continue
+
+        # Body text
         line = line.replace("**", "")
         pdf.set_font("Helvetica", "", 10)
-        pdf.multi_cell(0, 6, _s(line), wrapmode=_wm)
+        _emit(pdf, line, width=88, line_h=6)
 
     return bytes(pdf.output())
 
@@ -852,23 +855,24 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
         # ── Buttons next to the ④ heading ────────────────────────────────────
         report_date = date.today().strftime("%Y_%m_%d")
         report_name = f"nyc_311_service_equity_report_{report_date}.pdf"
-        pdf_bytes   = _generate_pdf(f1_sort, synthesis_text)
+        try:
+            pdf_bytes = _generate_pdf(f1_sort, synthesis_text)
+            _dl_col.download_button(
+                label="⬇️ Download",
+                data=pdf_bytes,
+                file_name=report_name,
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except Exception as _pdf_err:
+            _dl_col.warning(f"PDF error: {_pdf_err}")
 
-        _dl_col.download_button(
-            label="⬇️ Download",
-            data=pdf_bytes,
-            file_name=report_name,
-            mime="application/pdf",
-            use_container_width=True,
-        )
-
-        _safe = synthesis_text.replace("`", "\\`").replace("$", "\\$")
+        import html as _html
+        _escaped = _html.escape(synthesis_text, quote=True)
         with _cp_col:
             _components.html(f"""
-                <button onclick="navigator.clipboard.writeText(`{_safe}`).then(
-                    () => this.innerText = '✓ Copied',
-                    () => this.innerText = '⚠ Failed'
-                )"
+                <textarea id="synth" style="position:absolute;opacity:0;pointer-events:none;height:1px;width:1px">{_escaped}</textarea>
+                <button onclick="var t=document.getElementById('synth');t.removeAttribute('style');t.select();document.execCommand('copy');t.setAttribute('style','position:absolute;opacity:0;pointer-events:none;height:1px;width:1px');this.innerText='✓ Copied'"
                 style="width:100%;height:38px;background:#262730;color:white;
                        border:1px solid #555;border-radius:6px;cursor:pointer;
                        font-size:13px;font-family:sans-serif;">
