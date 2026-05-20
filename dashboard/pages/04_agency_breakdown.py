@@ -173,18 +173,17 @@ if agency_df.empty:
 
 # ── Sort control ──────────────────────────────────────────────────────────────
 sort_by = st.radio(
-    "Sort chart by",
-    ["Gap (Q1 − Q5)", "Total Requests", "Q1 Avg Equity", "Q5 Avg Equity"],
+    "Order by",
+    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc"],
     horizontal=True,
 )
-sort_col = {
-    "Gap (Q1 − Q5)": "gap",
-    "Total Requests": "total_requests",
-    "Q1 Avg Equity":  "q1_avg_equity",
-    "Q5 Avg Equity":  "q5_avg_equity",
+_sort_cols = {
+    "Gap desc":                           ["gap"],
+    "Total requests desc":                ["total_requests"],
+    "Gap desc, then total requests desc": ["gap", "total_requests"],
 }[sort_by]
 
-agency_df = agency_df.sort_values(sort_col, ascending=True)
+agency_df = agency_df.sort_values(_sort_cols, ascending=False)
 
 # ── Bar chart — equity gap by agency ─────────────────────────────────────────
 fig = px.bar(
@@ -230,7 +229,12 @@ st.dataframe(
         "q5_avg_equity":  "Q5 Avg Equity",
         "gap":            "Gap (Q1 − Q5)",
     })
-    .sort_values("Gap (Q1 − Q5)", ascending=False)
+    .sort_values(
+        ["Gap (Q1 − Q5)", "Total Requests"] if "total requests" in sort_by.lower() or "then" in sort_by.lower()
+        else ["Gap (Q1 − Q5)"] if "gap" in sort_by.lower()
+        else ["Total Requests"],
+        ascending=False,
+    )
     .reset_index(drop=True),
     use_container_width=True,
 )

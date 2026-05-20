@@ -299,6 +299,18 @@ min_volume_filter = st.checkbox(
 )
 volume_clause = "AND total_requests >= 500" if min_volume_filter else ""
 
+f1_sort = st.radio(
+    "Order by",
+    ["Gap desc", "Total requests desc", "Gap desc, then total requests desc"],
+    horizontal=True,
+    key="f1_sort",
+)
+f1_order = {
+    "Gap desc":                              "equity_gap DESC",
+    "Total requests desc":                   "total_requests DESC",
+    "Gap desc, then total requests desc":    "equity_gap DESC, total_requests DESC",
+}[f1_sort]
+
 gap_sql = f"""
 WITH gaps AS (
     SELECT
@@ -320,7 +332,7 @@ FROM gaps
 WHERE q1_avg IS NOT NULL
   AND q5_avg IS NOT NULL
   {volume_clause}
-ORDER BY equity_gap DESC
+ORDER BY {f1_order}
 LIMIT 10
 """
 gap_df = run_query(gap_sql)
@@ -349,7 +361,7 @@ if not gap_df.empty:
     fig.update_layout(coloraxis_showscale=False, yaxis_title=None)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("**Agency breakdown for the above complaint types:**")
+    st.markdown("**Details for the above complaint types:**")
     st.table(
         gap_df[["complaint_type", "agency", "total_requests", "q1_avg_equity", "q5_avg_equity", "equity_gap"]]
         .rename(columns={
@@ -574,6 +586,16 @@ borough_complaint_df = run_query("""
     ORDER BY borough, rn
 """)
 
+# Agency breakdown — same computation as the Agency Breakdown page
+agency_raw_df = run_query("""
+    SELECT complaint_type,
+           income_quintile,
+           SUM(request_count) AS total_requests,
+           AVG(equity_score)  AS avg_equity_score
+    FROM MARTS.FCT_EQUITY_SPLITS
+    GROUP BY complaint_type, income_quintile
+""")
+
 if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not headline_df.empty:
 
     # Ensure the cache table exists (runs once per server lifetime via @st.cache_resource)
@@ -626,6 +648,23 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
         for r in borough_complaint_df.to_dict("records")
     ) if not borough_complaint_df.empty else "  no data"
 
+    # Agency breakdown aggregation
+    if not agency_raw_df.empty:
+        agency_raw_df["agency"] = agency_raw_df["complaint_type"].map(_AGENCY).fillna("Other")
+        _vol  = agency_raw_df.groupby("agency")["total_requests"].sum()
+        _q1e  = agency_raw_df[agency_raw_df["income_quintile"]==1].groupby("agency")["avg_equity_score"].mean()
+        _q5e  = agency_raw_df[agency_raw_df["income_quintile"]==5].groupby("agency")["avg_equity_score"].mean()
+        _ag   = pd.concat([_vol, _q1e.rename("q1"), _q5e.rename("q5")], axis=1).dropna()
+        _ag["gap"] = _ag["q1"] - _ag["q5"]
+        _ag = _ag.sort_values("gap", ascending=False)
+        agency_json = "\n".join(
+            f"  {agency}: {int(row['total_requests']):,} requests, "
+            f"Q1={row['q1']:.3f}, Q5={row['q5']:.3f}, gap={row['gap']:.3f}"
+            for agency, row in _ag.iterrows()
+        )
+    else:
+        agency_json = "  no data"
+
     row     = headline_df.iloc[0]
     q1_avg  = float(row["q1_avg_equity"])
     q5_avg  = float(row["q5_avg_equity"])
@@ -633,7 +672,7 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
 
     data_hash = _data_hash(
         gap_json, heatmap_json,
-        trend_json + quintile_p90_json + top_complaints_json + borough_complaint_json,
+        trend_json + quintile_p90_json + top_complaints_json + borough_complaint_json + agency_json,
     )
 
     # Always check Snowflake first — zero API calls
@@ -676,6 +715,9 @@ Complaint Type Breakdown page — top 10 complaint types by total volume:
 
 Borough Map page — top 3 slowest complaint types per borough (500+ requests):
 {borough_complaint_json}
+
+Agency Breakdown page — total requests, Q1 avg equity, Q5 avg equity, and gap per agency (sorted by gap desc):
+{agency_json}
 
 Produce a root-cause assessment and actionable recommendations.\
 """
