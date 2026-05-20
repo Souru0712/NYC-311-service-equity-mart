@@ -104,6 +104,15 @@ FORMAT your response in markdown with these exact sections:
 **Root Cause Assessment** (unified causal explanation connecting all threads)
 **Recommendations** (numbered, specific, agency-named, prioritised by impact)
 
+CRITICAL ARITHMETIC RULE — this overrides everything else:
+Do NOT perform any arithmetic on the numbers in the data. Do not compute ratios, multiply, \
+divide, subtract, or derive any figure that is not explicitly stated in the input. If you \
+need to express a comparison, use only the values exactly as provided (e.g. "Q1 avg equity \
+score of 1.42 vs Q5 avg equity score of 1.19"). Any calculation you perform independently \
+will produce an incorrect result and will undermine the credibility of this report. \
+When in doubt, quote the number directly — do not rephrase it as a ratio or percentage \
+unless that ratio is given to you in the data.
+
 Write for a technically literate audience that includes city policymakers, journalists, and \
 community advocates. Be direct. Name agencies, boroughs, and complaint types. Do not hedge \
 unless the data is genuinely ambiguous. Do not summarise what the data shows — analyse, \
@@ -267,7 +276,7 @@ def _call_groq(prompt: str) -> str:
             {"role": "system", "content": _SYNTHESIS_SYSTEM},
             {"role": "user",   "content": prompt},
         ],
-        max_tokens=3000,
+        max_tokens=1500,
     )
     return response.choices[0].message.content
 
@@ -904,6 +913,12 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
         # Stored and ready — display in styled callout box
         st.session_state.pop("synthesis", None)
         synthesis_text = cached[1]
+        st.warning(
+            "**AI-generated narrative — verify all figures against the charts above before citing.** "
+            "This synthesis is produced by a language model and may misstate or miscalculate statistics. "
+            "Treat it as a presentation layer for non-technical readers, not as a source of truth.",
+            icon="⚠️",
+        )
         st.markdown(
             f'<div class="synthesis-box">{synthesis_text}</div>',
             unsafe_allow_html=True,
