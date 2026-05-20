@@ -17,24 +17,91 @@ inject_css()
 
 # ── Claude synthesis ──────────────────────────────────────────────────────────
 _SYNTHESIS_SYSTEM = """\
-You are a data analyst specialising in NYC municipal service equity.
-You will receive three findings from a 311 response-time dashboard and must produce:
+You are a senior urban policy analyst and data scientist embedded with NYC's Office of \
+Operations. You have deep expertise in municipal service delivery, 311 complaint systems, \
+NYC agency structure, and the socioeconomic geography of the five boroughs. You understand \
+how equity scores are calculated (tract P90 divided by the median of all tract P90s citywide), \
+what drives response time at the agency level, and how external events shape service delivery.
 
-1. A root-cause assessment (3–5 sentences) that directly answers: is the disparity
-   driven by income, geography (borough), or agency response protocols — or some
-   combination? Use the data to justify your answer. Name specific agencies, boroughs,
-   and complaint types where the numbers support it.
+You will receive a comprehensive dataset from a 311 service equity dashboard covering NYC \
+from January 2020 to the present. Your job is to produce a rigorous, multi-dimensional \
+analysis that goes beyond surface-level observations. You must reason causally — not just \
+describe patterns but explain why they exist and what can be done about them.
 
-2. Three to four concrete, actionable recommendations. Each recommendation must be
-   tied explicitly to one of the three findings. Name the agency or office responsible
-   for each action.
+ANALYTICAL FRAMEWORK — address each dimension with evidence from the data:
 
-Format your response as markdown with two sections:
-**Root Cause Assessment**
-**Recommended Actions**
+1. TEMPORAL ANALYSIS
+   - Examine the full monthly Q1 and Q5 equity score series. Identify specific periods of \
+elevated disparity and explain likely causes:
+     * 2020-2021: COVID-19 disrupted agency staffing, shifted complaint types (fewer noise, \
+more housing/heat), and created unequal service collapse in low-income neighborhoods
+     * 2021-2022: Recovery phase — some agencies rebuilt faster than others
+     * Seasonal patterns: summer (noise, heat, outdoor complaints surge), winter (heat/hot \
+water spikes for HPD), fall/spring (transition periods)
+   - If the gap narrows in a period, reason what drove it: increased staffing, policy change, \
+reduced demand, or seasonal relief
+   - If the gap widens in a period, identify which agencies or complaint types are likely responsible
 
-Write for a general public audience. Be direct. Do not hedge unless the data is
-genuinely ambiguous. Do not summarise what the findings show — assess and recommend.\
+2. GEOGRAPHIC ANALYSIS
+   - Explain borough-level disparities independently of income quintile breakdowns
+   - The Bronx: historically underfunded infrastructure, highest poverty rate of any US urban county, \
+older housing stock generating more HPD/DOB complaints, fewer NYPD resources per capita
+   - Brooklyn: highest population, wide income gradient from Brownsville to Brooklyn Heights, \
+Sanitation and DOT under high volume pressure
+   - Manhattan: concentrated noise complaints (NYPD responds fast due to density of precincts), \
+HPD heat complaints in northern Manhattan (East Harlem, Washington Heights)
+   - Queens: geographically largest borough, longer travel times for field response, large \
+immigrant communities with lower 311 call rates masking true demand
+   - Staten Island: suburban geography means DOT and Sanitation routes are longer; fewer \
+agency field offices
+   - If a borough shows high equity scores across ALL quintiles (not just Q1), this is a \
+geographic/resource problem — not an income equity problem
+
+3. INCOME EQUITY ASSESSMENT
+   - Distinguish structural income disparity (Q1 consistently worse across all boroughs and \
+complaint types) from geographic concentration (only specific boroughs drive Q1 scores up)
+   - If Q1 and Q5 scores are both above 1.0 in a borough, the entire borough is underserved — \
+income compounds an already poor baseline
+   - Identify which complaint types show the strongest income gradient and which agencies \
+are responsible for closing that gap
+
+4. AGENCY PERFORMANCE & ACCOUNTABILITY
+   - High volume + high gap = agency is overwhelmed and serving lower-income areas last — \
+a resource allocation failure requiring budget and staffing intervention
+   - High gap + low volume = statistical noise, not systemic evidence — flag this explicitly
+   - High volume + low gap = agency is performing equitably under pressure — identify what \
+they are doing right that others can learn from
+   - Low gap + low volume = inconclusive
+   - Name the specific agency deputy commissioner or office responsible for each disparity
+
+5. CAUSAL REASONING
+   - Never state a pattern without a cause. Use the data to rule in or rule out:
+     * External events (COVID, heat waves, budget cuts, policy changes)
+     * Structural factors (aging infrastructure, geographic size, staffing ratios)
+     * Operational factors (dispatch protocols, SLA definitions, agency culture)
+     * Demand factors (complaint volume changes, population shifts, seasonal cycles)
+
+6. RECOMMENDATIONS
+   - Each recommendation must name the responsible agency and the specific intervention
+   - Distinguish between: immediate operational fixes (dispatch, routing, SLAs), \
+medium-term policy changes (budget reallocation, agency accountability metrics), \
+and long-term structural investments (infrastructure, community outreach, proactive inspection)
+   - Prioritise recommendations by impact: high-volume + high-gap complaint types affect the \
+most residents and should be addressed first
+
+FORMAT your response in markdown with these exact sections:
+**Executive Summary** (3 sentences: what is happening, how bad it is, what is driving it)
+**Temporal Analysis** (what changed year by year and why)
+**Geographic Disparities** (borough-by-borough reasoning, not just income)
+**Income Equity Assessment** (Q1 vs Q5 structural patterns)
+**Agency Accountability** (who owns the biggest gaps and why)
+**Root Cause Assessment** (unified causal explanation connecting all threads)
+**Recommendations** (numbered, specific, agency-named, prioritised by impact)
+
+Write for a technically literate audience that includes city policymakers, journalists, and \
+community advocates. Be direct. Name agencies, boroughs, and complaint types. Do not hedge \
+unless the data is genuinely ambiguous. Do not summarise what the data shows — analyse, \
+reason, and recommend.\
 """
 
 
@@ -127,7 +194,7 @@ def _call_groq(prompt: str) -> str:
             {"role": "system", "content": _SYNTHESIS_SYSTEM},
             {"role": "user",   "content": prompt},
         ],
-        max_tokens=1024,
+        max_tokens=3000,
     )
     return response.choices[0].message.content
 
@@ -625,11 +692,12 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     # Ensure the cache table exists (runs once per server lifetime via @st.cache_resource)
     _ensure_cache_table()
 
-    # Build compact text representations of the three findings
-    gap_records = gap_df[["complaint_type", "agency", "q1_avg_equity", "q5_avg_equity", "equity_gap"]].to_dict("records")
+    # ── Fix 1: volume-tagged gap_json with low-volume flag ───────────────────
+    gap_records = gap_df[["complaint_type", "agency", "q1_avg_equity", "q5_avg_equity", "equity_gap", "total_requests"]].to_dict("records")
     gap_json = "\n".join(
         f"  {r['complaint_type']} (agency: {r['agency']}): gap={r['equity_gap']:.3f}, "
-        f"Q1={r['q1_avg_equity']:.2f}, Q5={r['q5_avg_equity']:.2f}"
+        f"Q1={r['q1_avg_equity']:.2f}, Q5={r['q5_avg_equity']:.2f}, "
+        f"volume={int(r['total_requests']):,}{' [LOW VOLUME — treat gap with caution]' if r['total_requests'] < 500 else ''}"
         for r in gap_records
     )
 
@@ -638,20 +706,22 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
         for r in heatmap_df.to_dict("records")
     )
 
-    # Always use monthly trend for AI synthesis regardless of display mode
+    # ── Fix 2: full monthly trend series ─────────────────────────────────────
     trend_monthly = trend_df.copy()
     trend_q1 = trend_monthly[trend_monthly["income_quintile"] == 1].sort_values("request_month")
     trend_q5 = trend_monthly[trend_monthly["income_quintile"] == 5].sort_values("request_month")
-    def _trend_line(df, label):
+
+    def _full_series(df):
         if df.empty:
-            return f"  {label}: no data"
-        first, last = df.iloc[0], df.iloc[-1]
-        direction = "widening" if last["avg_equity_score"] > first["avg_equity_score"] else "narrowing"
-        return (
-            f"  {label}: {first['avg_equity_score']:.2f} ({str(first['request_month'])[:10]}) → "
-            f"{last['avg_equity_score']:.2f} ({str(last['request_month'])[:10]}) — {direction}"
+            return "no data"
+        return ", ".join(
+            f"{str(r['request_month'])[:7]}={r['avg_equity_score']:.2f}"
+            for _, r in df.iterrows()
         )
-    trend_json = "\n".join([_trend_line(trend_q1, "Q1"), _trend_line(trend_q5, "Q5")])
+    trend_json = (
+        f"  Q1 monthly: {_full_series(trend_q1)}\n"
+        f"  Q5 monthly: {_full_series(trend_q5)}"
+    )
 
     # Extra page context as JSON strings
     quintile_p90_json = "\n".join(
@@ -694,9 +764,10 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     q5_avg  = float(row["q5_avg_equity"])
     ratio   = float(row["overall_ratio"])
 
+    # ── Fix 3: hash includes sort choice so each sort gets its own synthesis ──
     data_hash = _data_hash(
         gap_json, heatmap_json,
-        trend_json + quintile_p90_json + top_complaints_json + borough_complaint_json + agency_json,
+        trend_json + quintile_p90_json + top_complaints_json + borough_complaint_json + agency_json + f1_sort,
     )
 
     # Always check Snowflake first — zero API calls
@@ -717,33 +788,52 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     else:
         # No row yet — show the generate button
         prompt = f"""\
-Overall equity gap:
+DASHBOARD CONTEXT
+The user is viewing Finding 1 sorted by: {f1_sort}.
+Frame your analysis accordingly — \
+{'prioritise the largest equity gaps and which agencies own them' if f1_sort == 'Gap desc' else 'prioritise high-volume agencies where systemic underservice affects the most residents'}.
+
+CITYWIDE HEADLINE METRICS
   Q1 avg equity score: {q1_avg:.2f}
   Q5 avg equity score: {q5_avg:.2f}
-  Q1/Q5 ratio: {ratio:.2f}×
+  Q1/Q5 ratio: {ratio:.2f}× (Q1 tracts wait {ratio:.2f}x longer than Q5 tracts on average)
 
-Finding 1 — Top 10 complaint types by equity gap (Q1 vs Q5):
+TOP 10 COMPLAINT TYPES — sorted by {f1_sort}
+Equity score = tract P90 ÷ median tract P90 citywide (1.0 = city average). \
+Complaint types marked [LOW VOLUME] have fewer than 500 requests — their gaps are \
+statistically unreliable and should not be cited as systemic evidence.
 {gap_json}
 
-Finding 2 — Borough × income quintile avg equity scores (1.0 = city average):
+BOROUGH × INCOME QUINTILE HEATMAP (avg equity score, 1.0 = city average)
+Use this to distinguish geographic disparity (whole borough elevated) from \
+income disparity (gradient within a borough from Q1 to Q5).
 {heatmap_json}
 
-Finding 3 — Monthly equity trend Q1 vs Q5:
+FULL MONTHLY EQUITY TREND — Q1 vs Q5 (January 2020 to present)
+Examine this series carefully. Identify specific months/periods of elevated or \
+narrowing gaps and reason about their causes (COVID disruption, seasonal demand, \
+staffing changes, policy interventions). Do not treat this as a single summary — \
+analyse the shape of the curve.
 {trend_json}
 
-Equity by Income page — avg P90 hours and equity score by income quintile (all complaint types):
+INCOME QUINTILE — AVG P90 HOURS AND EQUITY SCORE (all complaint types combined)
 {quintile_p90_json}
 
-Complaint Type Breakdown page — top 10 complaint types by total volume:
+TOP 10 COMPLAINT TYPES BY TOTAL VOLUME (cross-reference with equity gap data above)
+High-volume + high-gap = systemic and urgent. High-volume + low-gap = agency performing well under pressure.
 {top_complaints_json}
 
-Borough Map page — top 3 slowest complaint types per borough (500+ requests):
+SLOWEST COMPLAINT TYPES PER BOROUGH — top 3 by avg P90 (500+ requests only)
+Use this to explain why specific boroughs show elevated equity scores regardless of income.
 {borough_complaint_json}
 
-Agency Breakdown page — total requests, Q1 avg equity, Q5 avg equity, and gap per agency (sorted by gap desc):
+AGENCY BREAKDOWN — total requests, Q1 avg equity, Q5 avg equity, gap (sorted by gap desc)
+Gap = Q1 avg equity − Q5 avg equity. High gap = agency treats income groups unequally. \
+High volume + high gap = most urgent intervention needed.
 {agency_json}
 
-Produce a root-cause assessment and actionable recommendations.\
+Produce your full analysis following the framework in your instructions. \
+Be specific, be causal, be actionable.\
 """
         st.info("No AI synthesis stored yet for the current data.")
         if st.button("Generate AI Analysis", type="primary"):
