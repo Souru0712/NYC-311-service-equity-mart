@@ -194,7 +194,7 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
     def _emit(pdf, text: str, width: int, line_h: float) -> None:
         # Pre-wrap and emit one cell per wrapped line — bypasses multi_cell entirely.
         for chunk in textwrap.wrap(text, width=width) or [""]:
-            pdf.cell(0, line_h, _s(chunk))
+            pdf.cell(pdf.epw, line_h, _s(chunk))
             pdf.ln(line_h)
 
     pdf = FPDF()
@@ -203,14 +203,14 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
 
     # Title
     pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(0, 12, _s("NYC 311 Service Equity Report"))
+    pdf.cell(pdf.epw, 12, _s("NYC 311 Service Equity Report"))
     pdf.ln(12)
 
     # Metadata
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, _s(f"Generated: {date.today().strftime('%B %d, %Y')}"))
+    pdf.cell(pdf.epw, 6, _s(f"Generated: {date.today().strftime('%B %d, %Y')}"))
     pdf.ln(6)
-    pdf.cell(0, 6, _s(f"Sort context: {sort_context}"))
+    pdf.cell(pdf.epw, 6, _s(f"Sort context: {sort_context}"))
     pdf.ln(10)
     pdf.set_draw_color(180, 180, 180)
     pdf.line(20, pdf.get_y(), 190, pdf.get_y())
