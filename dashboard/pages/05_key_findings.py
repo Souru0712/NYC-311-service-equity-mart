@@ -27,11 +27,11 @@ _SYNTHESIS_SYSTEM = """\
 You are a plain-language chart narrator for a public 311 service-equity dashboard. \
 Your sole role is to describe what each data visualization shows in clear, accessible \
 language for a non-technical audience. You do not draw equity conclusions, make policy \
-recommendations, or assess whether income-based inequity exists — those conclusions are \
+recommendations, or assess whether income-based inequity exists -- those conclusions are \
 provided to you as locked verified findings and you must restate them exactly as written \
 without extension or interpretation.
 
-LOCKED VERIFIED FINDINGS — restate these exactly, do not modify, extend, or contradict:
+LOCKED VERIFIED FINDINGS -- restate these exactly, do not modify, extend, or contradict:
 1. At the median, 311 response time is equal across income quintiles citywide (P50 8-10 hrs all quintiles).
 2. The real gap is within complaint type: NYPD noise complaints resolve 1.5-2x slower in Q1 tracts \
 (Q1 median tract P90 3-4 hrs vs Q5 2 hrs), consistent across four categories, 1.7M+ Q1 requests.
@@ -39,13 +39,13 @@ LOCKED VERIFIED FINDINGS — restate these exactly, do not modify, extend, or co
 4. The aggregate Q1>Q5 claim is a complaint-mix confound. Helicopter noise: identical P90 in both \
 quintiles (~26,600 hrs), Q5 files it 62x more. The aggregate gap is a volume-composition artifact.
 5. Both quintiles have idiosyncratic slow tails. Cross-quintile aggregates are uninformative.
-6. An initial 3.7x Real Time Enforcement finding was invalidated — Q5 lacked sufficient volume for \
+6. An initial 3.7x Real Time Enforcement finding was invalidated -- Q5 lacked sufficient volume for \
 a defensible comparison.
 7. Equity is only answerable within complaint type.
 
-HARD PROHIBITIONS — violating any of these makes the output unusable:
+HARD PROHIBITIONS -- violating any of these makes the output unusable:
 - Never state that low-income neighborhoods wait longer overall or on average.
-- Never describe the monthly trend as an equity gap — call it a response-time trend.
+- Never describe the monthly trend as an equity gap -- call it a response-time trend.
 - Never attribute a complaint type's slowness to the neighborhood that files it without \
   confirming the P90 is different between quintiles for that specific type.
 - Never compute, infer, or state any ratio or direction not explicitly provided in the input.
@@ -55,96 +55,6 @@ FORMAT: one short paragraph per chart/finding, plain English, no jargon, no mark
 Total response under 400 words.\
 """
 
-You will receive a comprehensive dataset from a 311 service equity dashboard covering NYC \
-from January 2020 to the present. Your job is to produce a rigorous, multi-dimensional \
-analysis that goes beyond surface-level observations. You must reason causally — not just \
-describe patterns but explain why they exist and what can be done about them.
-
-ANALYTICAL FRAMEWORK — address each dimension with evidence from the data:
-
-1. TEMPORAL ANALYSIS
-   - Examine the full monthly Q1 and Q5 equity score series. Identify specific periods of \
-elevated disparity and explain likely causes:
-     * 2020-2021: COVID-19 disrupted agency staffing, shifted complaint types (fewer noise, \
-more housing/heat), and created unequal service collapse in low-income neighborhoods
-     * 2021-2022: Recovery phase — some agencies rebuilt faster than others
-     * Seasonal patterns: summer (noise, heat, outdoor complaints surge), winter (heat/hot \
-water spikes for HPD), fall/spring (transition periods)
-   - If the gap narrows in a period, reason what drove it: increased staffing, policy change, \
-reduced demand, or seasonal relief
-   - If the gap widens in a period, identify which agencies or complaint types are likely responsible
-
-2. GEOGRAPHIC ANALYSIS
-   - Explain borough-level disparities independently of income quintile breakdowns
-   - The Bronx: historically underfunded infrastructure, highest poverty rate of any US urban county, \
-older housing stock generating more HPD/DOB complaints, fewer NYPD resources per capita
-   - Brooklyn: highest population, wide income gradient from Brownsville to Brooklyn Heights, \
-Sanitation and DOT under high volume pressure
-   - Manhattan: concentrated noise complaints (NYPD responds fast due to density of precincts), \
-HPD heat complaints in northern Manhattan (East Harlem, Washington Heights)
-   - Queens: geographically largest borough, longer travel times for field response, large \
-immigrant communities with lower 311 call rates masking true demand
-   - Staten Island: suburban geography means DOT and Sanitation routes are longer; fewer \
-agency field offices
-   - If a borough shows high equity scores across ALL quintiles (not just Q1), this is a \
-geographic/resource problem — not an income equity problem
-
-3. INCOME EQUITY ASSESSMENT
-   - Distinguish structural income disparity (Q1 consistently worse across all boroughs and \
-complaint types) from geographic concentration (only specific boroughs drive Q1 scores up)
-   - If Q1 and Q5 scores are both above 1.0 in a borough, the entire borough is underserved — \
-income compounds an already poor baseline
-   - Identify which complaint types show the strongest income gradient and which agencies \
-are responsible for closing that gap
-
-4. AGENCY PERFORMANCE & ACCOUNTABILITY
-   - High volume + high gap = agency is overwhelmed and serving lower-income areas last — \
-a resource allocation failure requiring budget and staffing intervention
-   - High gap + low volume = statistical noise, not systemic evidence — flag this explicitly
-   - High volume + low gap = agency is performing equitably under pressure — identify what \
-they are doing right that others can learn from
-   - Low gap + low volume = inconclusive
-   - Name the specific agency deputy commissioner or office responsible for each disparity
-
-5. CAUSAL REASONING
-   - Never state a pattern without a cause. Use the data to rule in or rule out:
-     * External events (COVID, heat waves, budget cuts, policy changes)
-     * Structural factors (aging infrastructure, geographic size, staffing ratios)
-     * Operational factors (dispatch protocols, SLA definitions, agency culture)
-     * Demand factors (complaint volume changes, population shifts, seasonal cycles)
-
-6. RECOMMENDATIONS
-   - Each recommendation must name the responsible agency and the specific intervention
-   - Distinguish between: immediate operational fixes (dispatch, routing, SLAs), \
-medium-term policy changes (budget reallocation, agency accountability metrics), \
-and long-term structural investments (infrastructure, community outreach, proactive inspection)
-   - Prioritise recommendations by impact: high-volume + high-gap complaint types affect the \
-most residents and should be addressed first
-
-FORMAT your response in markdown with these exact sections:
-**Executive Summary** (3 sentences: what is happening, how bad it is, what is driving it)
-**Temporal Analysis** (what changed year by year and why)
-**Geographic Disparities** (borough-by-borough reasoning, not just income)
-**Income Equity Assessment** (Q1 vs Q5 structural patterns)
-**Agency Accountability** (who owns the biggest gaps and why)
-**Root Cause Assessment** (unified causal explanation connecting all threads)
-**Recommendations** (numbered, specific, agency-named, prioritised by impact)
-
-CRITICAL ARITHMETIC RULE — this overrides everything else:
-Do NOT perform any arithmetic on the numbers in the data. Do not compute ratios, multiply, \
-divide, subtract, or derive any figure that is not explicitly stated in the input. If you \
-need to express a comparison, use only the values exactly as provided (e.g. "Q1 avg equity \
-score of 1.42 vs Q5 avg equity score of 1.19"). Any calculation you perform independently \
-will produce an incorrect result and will undermine the credibility of this report. \
-When in doubt, quote the number directly — do not rephrase it as a ratio or percentage \
-unless that ratio is given to you in the data.
-
-Write for a technically literate audience that includes city policymakers, journalists, and \
-community advocates. Be direct. Name agencies, boroughs, and complaint types. Do not hedge \
-unless the data is genuinely ambiguous. Do not summarise what the data shows — analyse, \
-reason, and recommend.\
-"""
-
 
 def _data_hash(gap_json: str, heatmap_json: str, trend_json: str) -> str:
     import hashlib
@@ -152,7 +62,7 @@ def _data_hash(gap_json: str, heatmap_json: str, trend_json: str) -> str:
 
 
 def _ensure_cache_table() -> None:
-    """Ensure AI_SYNTHESIS_CACHE exists. Idempotent — safe to call on every page load."""
+    """Ensure AI_SYNTHESIS_CACHE exists. Idempotent -- safe to call on every page load."""
     from utils.snowflake_conn import get_snowflake_conn
     try:
         get_snowflake_conn().cursor().execute("""
@@ -173,8 +83,8 @@ def _load_cached_synthesis(data_hash: str) -> tuple[str, str] | None:
     Queries Snowflake directly (no cache) so the button disappears immediately
     after generation without waiting for run_query's TTL to expire.
 
-    status: 'pending' — another process is generating, don't call Groq again.
-            'complete' — ready to display.
+    status: 'pending' -- another process is generating, don't call Groq again.
+            'complete' -- ready to display.
     """
     from utils.snowflake_conn import get_snowflake_conn
     try:
@@ -229,11 +139,11 @@ def _generate_pdf(sort_context: str, body: str) -> bytes:
     from fpdf import FPDF
 
     def _s(text: str) -> str:
-        # Sanitize to latin-1 — any unencodable character becomes ?.
+        # Sanitize to latin-1 -- any unencodable character becomes ?.
         return text.encode("latin-1", errors="replace").decode("latin-1")
 
     def _emit(pdf, text: str, width: int, line_h: float) -> None:
-        # Pre-wrap and emit one cell per wrapped line — bypasses multi_cell entirely.
+        # Pre-wrap and emit one cell per wrapped line -- bypasses multi_cell entirely.
         for chunk in textwrap.wrap(text, width=width) or [""]:
             pdf.cell(pdf.epw, line_h, _s(chunk))
             pdf.ln(line_h)
@@ -306,7 +216,7 @@ def _call_groq(prompt: str) -> str:
     )
     return response.choices[0].message.content
 
-# Agency responsible for each complaint type — mirrors the reference tab in app.py
+# Agency responsible for each complaint type -- mirrors the reference tab in app.py
 _AGENCY: dict[str, str] = {
     "ANIMAL IN A PARK": "Parks",
     "ANIMAL-ABUSE": "NYPD/ACC",
@@ -391,7 +301,7 @@ _AGENCY: dict[str, str] = {
 
 st.header("🔍 Key Findings")
 st.markdown("""
-The other pages show *what* is happening. This page answers *why* — and *who* should act on it.
+The other pages show *what* is happening. This page answers *why* -- and *who* should act on it.
 
 The core question: when low-income neighborhoods wait longer for 311 responses, is it because of
 **where they are** (geography), **how much they earn** (income), or **what they reported**
@@ -402,25 +312,25 @@ with st.expander("How to read this page"):
     st.markdown("""
     **Equity score methodology:**
     Equity score = tract P90 ÷ **median tract P90** citywide for that complaint type and month.
-    Every tract counts equally in the baseline — high-volume boroughs do not skew the reference.
+    Every tract counts equally in the baseline -- high-volume boroughs do not skew the reference.
     Score 1.0 = this tract matches the typical NYC neighborhood.
     Score > 1.0 = residents wait longer than the typical tract.
 
-    **Finding 1 — Equity gap by complaint type:**
+    **Finding 1 -- Equity gap by complaint type:**
     Each bar is one complaint type, sized by how much longer Q1 (lowest income) tracts wait
     relative to Q5 (highest income) tracts on average equity score.
     The agency column tells you who is accountable.
-    If the gap clusters around one or two agencies, the problem is agency-driven — not just
+    If the gap clusters around one or two agencies, the problem is agency-driven -- not just
     neighborhood-driven.
 
-    **Finding 2 — Borough × income quintile heatmap:**
+    **Finding 2 -- Borough × income quintile heatmap:**
     Each cell is the average equity score for that borough/quintile combination.
     Green (≤1.0) = at or below the median tract baseline. Red (>1.0) = longer than typical.
     - If all quintiles in a borough are red → the whole borough is underserved regardless of income
       (geographic problem).
     - If you see a green-to-red gradient from Q5 → Q1 within every borough → income is the
       predictor, not location (structural equity problem).
-    - The most actionable pattern is a borough where Q1 is deeply red but Q5 is green —
+    - The most actionable pattern is a borough where Q1 is deeply red but Q5 is green --
       same city, same agency, different treatment.
 
 """)
@@ -470,8 +380,8 @@ if not headline_df.empty:
             f"~{noise['q1_over_q5_gap'].median():.1f}×",
             help=(
                 "Consistent ~2× gap across Noise - Residential, Street/Sidewalk, Vehicle, "
-                "and Commercial — all handled by NYPD. "
-                "Q1 median P90 ≈ 3–4 hrs vs Q5 ≈ 2 hrs."
+                "and Commercial -- all handled by NYPD. "
+                "Q1 median P90 ≈ 3-4 hrs vs Q5 ≈ 2 hrs."
             ),
         )
         col3.metric(
@@ -482,15 +392,15 @@ if not headline_df.empty:
     st.caption(
         "Gaps sourced from `FCT_EQUITY_GAP_BY_TYPE`: per-tract median P90, "
         "30-complaint volume floor per tract, bilateral 500-complaint guard per quintile. "
-        "Aggregate Q1-vs-Q5 comparisons are not shown — they invert due to complaint-mix "
+        "Aggregate Q1-vs-Q5 comparisons are not shown -- they invert due to complaint-mix "
         "confounding (confirmed: helicopter noise, tree requests, and food inspections "
-        "have identical P90s in Q1 and Q5 but are filed 2–62× more often by Q5 tracts)."
+        "have identical P90s in Q1 and Q5 but are filed 2-62× more often by Q5 tracts)."
     )
 
 st.divider()
 
 # ── Finding 1: Which complaint types drive the gap? ───────────────────────────
-st.subheader("① Which complaint types have the biggest equity gap — and which agencies own them?")
+st.subheader("① Which complaint types have the biggest equity gap -- and which agencies own them?")
 st.markdown("""
 The bars below show the top 10 complaint types ranked by the difference in **median** equity score
 between Q1 and Q5 tracts (only rows with 10+ complaints per tract per month are included, removing
@@ -600,11 +510,11 @@ if not gap_df.empty:
     )
     st.caption(
         "**How to read:** Click any column header to sort. "
-        "Complaint types with fewer than 500 total requests have statistically unreliable gaps — "
+        "Complaint types with fewer than 500 total requests have statistically unreliable gaps -- "
         "focus on high-volume types where the gap reflects real systemic patterns."
     )
 else:
-    st.info("No data found — run the pipeline first.")
+    st.info("No data found -- run the pipeline first.")
 
 st.divider()
 
@@ -615,7 +525,7 @@ Each cell shows the average equity score for that borough and income quintile.
 **Green = at or below city-average wait. Red = above city-average wait.**
 
 Read each borough row left to right (Q1 → Q5). A gradient from red to green within a single
-borough row means income — not just location — determines how fast the city responds.
+borough row means income -- not just location -- determines how fast the city responds.
 A borough where every cell is red regardless of quintile points to a resource deficit for that
 entire area.
 """)
@@ -674,15 +584,15 @@ if not heatmap_df.empty:
         "**How to read:** Each cell = avg equity score for that borough and income quintile. "
         "Green (<=1.0) = at or below city median wait. Red (>1.0) = longer than typical. "
         "A red-to-green gradient across a row (Q1->Q5) = income drives the gap. "
-        "A row that is entirely red regardless of quintile = the whole borough is underserved — a geographic problem, not just an income problem."
+        "A row that is entirely red regardless of quintile = the whole borough is underserved -- a geographic problem, not just an income problem."
     )
 else:
-    st.info("No data found — run the pipeline first.")
+    st.info("No data found -- run the pipeline first.")
 
 st.divider()
 
 # ── Finding 3: Equity trend over time ────────────────────────────────────────
-st.subheader("③ Is the gap growing or closing? Equity score trend — Q1 vs Q5")
+st.subheader("③ Is the gap growing or closing? Equity score trend -- Q1 vs Q5")
 st.markdown("""
 Tracks whether the service disparity between the lowest and highest income tracts is improving
 over time. A widening gap signals that inequity is systemic and worsening.
@@ -696,7 +606,7 @@ seasonal_trend = st.checkbox(
          "so structural trends stand out from month-to-month noise.",
 )
 
-# Always fetch monthly — used for the chart (monthly mode) and AI synthesis
+# Always fetch monthly -- used for the chart (monthly mode) and AI synthesis
 trend_sql = """
 SELECT
     request_month,
@@ -716,7 +626,7 @@ if not trend_df.empty:
     import pandas as pd
 
     if seasonal_trend:
-        # Aggregate monthly data to seasons in pandas — avoids a second SQL query
+        # Aggregate monthly data to seasons in pandas -- avoids a second SQL query
         temp = trend_df.copy()
         temp["month"] = pd.to_datetime(temp["request_month"]).dt.month
         temp["yr"]    = pd.to_datetime(temp["request_month"]).dt.year
@@ -746,13 +656,13 @@ if not trend_df.empty:
     trend_fig = go.Figure()
     trend_fig.add_trace(go.Scatter(
         x=q5["period"], y=q5["avg_equity_score"],
-        name="Q5 — highest income", mode="lines+markers",
+        name="Q5 -- highest income", mode="lines+markers",
         line=dict(color="#4C9BE8", width=2), marker=dict(size=5),
         hovertemplate="<b>%{x}</b><br>Q5 avg equity score: %{y:.3f}<extra></extra>",
     ))
     trend_fig.add_trace(go.Scatter(
         x=q1["period"], y=q1["avg_equity_score"],
-        name="Q1 — lowest income", mode="lines+markers",
+        name="Q1 -- lowest income", mode="lines+markers",
         line=dict(color="#E84C4C", width=2), marker=dict(size=5),
         fill="tonexty", fillcolor="rgba(232, 76, 76, 0.12)",
         hovertemplate="<b>%{x}</b><br>Q1 avg equity score: %{y:.3f}<extra></extra>",
@@ -771,18 +681,18 @@ if not trend_df.empty:
         "**How to read this chart:** "
         "The **red line (Q1)** is the average equity score for the lowest-income 20% of NYC census tracts; "
         "**blue (Q5)** is the highest-income 20%. "
-        "Both lines sitting above 1.0 means both groups wait longer than the city median — but the "
+        "Both lines sitting above 1.0 means both groups wait longer than the city median -- but the "
         "**shaded area between them is the inequality**: the wider it is, the more response times favour "
         "wealthier neighbourhoods. "
         "A **widening gap** means the disparity is growing; a **narrowing gap** means operations or policy "
         "changes are having an effect. "
-        "Seasonal spikes — particularly summer peaks — reflect complaint surges (noise, heat) that agencies "
+        "Seasonal spikes -- particularly summer peaks -- reflect complaint surges (noise, heat) that agencies "
         "absorb unevenly across income levels. "
         "Use **monthly view** to pinpoint individual spikes; switch to **seasonal view** to see structural "
         "patterns without month-to-month noise."
     )
 
-    # Volume table — matches the current grouping (monthly or seasonal)
+    # Volume table -- matches the current grouping (monthly or seasonal)
     q1_vol = q1["total_requests"].fillna(0).astype(int).values
     q5_vol = q5["total_requests"].fillna(0).astype(int).values
     volume_table = pd.DataFrame({
@@ -794,33 +704,33 @@ if not trend_df.empty:
     st.markdown(f"**Q1 vs Q5 request volume by {'season' if seasonal_trend else 'month'}:**")
     st.dataframe(volume_table, use_container_width=True)
 else:
-    st.info("No data found — run the pipeline first.")
+    st.info("No data found -- run the pipeline first.")
 
 st.divider()
 
-# ── ④ Verified findings — static, human-written, cannot drift ─────────────────
+# ── ④ Verified findings -- static, human-written, cannot drift ─────────────────
 st.subheader("④ Verified Findings")
 st.caption("Human-written and locked to the numbers in the charts above. These are the only claims this dashboard makes.")
 st.markdown("""
 **① At the median, response time is equal across income quintiles citywide.**
-P50 response time is 8–10 hours across all five income quintiles. For the typical 311
+P50 response time is 8-10 hours across all five income quintiles. For the typical 311
 complaint, low-income and high-income neighborhoods resolve at the same speed.
 
-**② The real gap is within complaint type, not across them — NYPD noise is the headline.**
-NYPD takes 1.5–2× longer on noise complaints in low-income tracts (Q1 median tract P90:
-3–4 hrs vs Q5: 2 hrs), consistent across four independent categories — Noise Residential,
-Street/Sidewalk, Vehicle, and Commercial — covering 1.7M+ low-income-tract requests.
+**② The real gap is within complaint type, not across them -- NYPD noise is the headline.**
+NYPD takes 1.5-2× longer on noise complaints in low-income tracts (Q1 median tract P90:
+3-4 hrs vs Q5: 2 hrs), consistent across four independent categories -- Noise Residential,
+Street/Sidewalk, Vehicle, and Commercial -- covering 1.7M+ low-income-tract requests.
 Consistency across four categories handled by the same agency is more convincing than any
 single large number.
 
 **③ DOT street-sign repairs show the largest gap but at lower volume.**
-Q1 median tract P90 = 174 days vs Q5 = 37 days (4.7×). Q1 n = 535 complaints — the gap
+Q1 median tract P90 = 174 days vs Q5 = 37 days (4.7×). Q1 n = 535 complaints -- the gap
 is statistically supported but carries less confidence than the noise cluster.
 
 **④ The aggregate "low-income waits longer" claim is confounded by complaint mix.**
 When all complaint types are pooled, Q5 P90 actually exceeds Q1 P90 (813 hrs vs 474 hrs).
 This inverts because Q5 tracts file structurally slow, often unresolvable complaint types
-at far higher rates — helicopter noise is filed 62× more often by Q5 than Q1, with
+at far higher rates -- helicopter noise is filed 62× more often by Q5 than Q1, with
 identical P90s in both quintiles (~26,600 hrs). The aggregate gap is a volume-composition
 artifact, not a service-quality signal.
 
@@ -842,12 +752,12 @@ holds at that grain. Aggregate comparisons do not.
 
 st.divider()
 
-# ── ⑤ AI chart narration — description only, findings locked ──────────────────
+# ── ⑤ AI chart narration -- description only, findings locked ──────────────────
 import streamlit.components.v1 as _components
 
 _h_col, _btn_col = st.columns([5, 2.6])
 _h_col.subheader("⑤ AI Chart Narration")
-_h_col.caption("Plain-language description of the charts above. Findings are locked — the AI restates, does not interpret.")
+_h_col.caption("Plain-language description of the charts above. Findings are locked -- the AI restates, does not interpret.")
 # _btn_col is filled below once synthesis is confirmed cached and complete
 
 # Extra context from other dashboard pages fed into Groq
@@ -892,7 +802,7 @@ borough_complaint_df = run_query("""
     ORDER BY borough, rn
 """)
 
-# Agency breakdown — same computation as the Agency Breakdown page
+# Agency breakdown -- same computation as the Agency Breakdown page
 agency_raw_df = run_query("""
     SELECT complaint_type,
            income_quintile,
@@ -913,7 +823,7 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty:
     gap_json = "\n".join(
         f"  {r['complaint_type']} (agency: {r['agency']}): gap={r['equity_gap']:.3f}, "
         f"Q1={r['q1_avg_equity']:.2f}, Q5={r['q5_avg_equity']:.2f}, "
-        f"volume={int(r['total_requests']):,}{' [LOW VOLUME — treat gap with caution]' if r['total_requests'] < 500 else ''}"
+        f"volume={int(r['total_requests']):,}{' [LOW VOLUME -- treat gap with caution]' if r['total_requests'] < 500 else ''}"
         for r in gap_records
     )
 
@@ -988,17 +898,17 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty:
         trend_json + top_gaps_json + top_complaints_json + borough_complaint_json + agency_json + f1_sort,
     )
 
-    # Always check Snowflake first — zero API calls
+    # Always check Snowflake first -- zero API calls
     cached = _load_cached_synthesis(data_hash)
 
     _dev = is_dev()
 
     if cached and cached[0] == "complete":
-        # Stored and ready — display in styled callout box
+        # Stored and ready -- display in styled callout box
         st.session_state.pop("synthesis", None)
         synthesis_text = cached[1]
         st.warning(
-            "**AI-generated narrative — verify all figures against the charts above before citing.** "
+            "**AI-generated narrative -- verify all figures against the charts above before citing.** "
             "This synthesis is produced by a language model and may misstate or miscalculate statistics. "
             "Treat it as a presentation layer for non-technical readers, not as a source of truth.",
             icon="⚠️",
@@ -1024,7 +934,7 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty:
                 get_snowflake_conn().cursor().execute("TRUNCATE TABLE MARTS.AI_SYNTHESIS_CACHE")
                 st.rerun()
 
-        # ── Buttons next to the ④ heading — both rendered in one HTML component ──
+        # ── Buttons next to the ④ heading -- both rendered in one HTML component ──
         import base64 as _b64
         import html as _html
 
@@ -1072,7 +982,7 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty:
     elif cached and cached[0] == "pending":
         st.info("Analysis is being generated. Refresh the page in a few seconds to see it.")
         if _dev:
-            if st.button("🗑️ Clear stuck pending row", help="Dev only — removes the pending lock so generation can restart"):
+            if st.button("🗑️ Clear stuck pending row", help="Dev only -- removes the pending lock so generation can restart"):
                 from utils.snowflake_conn import get_snowflake_conn
                 get_snowflake_conn().cursor().execute(
                     "DELETE FROM MARTS.AI_SYNTHESIS_CACHE WHERE status = 'pending'"
@@ -1080,34 +990,34 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty:
                 st.rerun()
 
     else:
-        # No cached row — only dev can trigger generation
+        # No cached row -- only dev can trigger generation
         prompt = f"""\
-METHODOLOGY NOTE — read before analysing any number:
+METHODOLOGY NOTE -- read before analysing any number:
 Aggregate Q1-vs-Q5 comparisons (averaging equity scores across all complaint types) are \
 confounded by complaint-mix and are NOT provided. Reason: Q5 tracts file structurally \
-slow complaint types (helicopter noise, tree requests) at much higher rates than Q1 — \
+slow complaint types (helicopter noise, tree requests) at much higher rates than Q1 -- \
 confirmed via tail decomposition showing identical P90s in both quintiles for those types \
 (helicopter: Q1 P90 ~26,644 hrs, Q5 P90 ~26,317 hrs) but Q5 filing them 62× more often. \
 The aggregate gap inverts and is meaningless. Equity is only answerable WITHIN complaint type. \
 All gap figures below are within-complaint-type comparisons.
 
-CONFIRMED EQUITY GAPS — within-complaint-type, median tract P90, volume floor ≥30/tract, \
+CONFIRMED EQUITY GAPS -- within-complaint-type, median tract P90, volume floor ≥30/tract, \
 bilateral ≥500 complaint guard. q1_over_q5_gap > 1.0 means low-income tracts wait longer. \
 These are the only defensible headline numbers. Do not compute or infer any other gap.
 {top_gaps_json}
 
-FINDING 1 — Top complaint types by Q1-vs-Q5 gap (same methodology, sorted by {f1_sort}):
+FINDING 1 -- Top complaint types by Q1-vs-Q5 gap (same methodology, sorted by {f1_sort}):
 {gap_json}
 
-FINDING 2 — Borough × income quintile median equity score heatmap (1.0 = city median wait):
+FINDING 2 -- Borough × income quintile median equity score heatmap (1.0 = city median wait):
 Use this to distinguish geographic disparity (entire borough elevated) from income disparity \
 (gradient within a borough from Q1 to Q5). Note: these equity scores are per-complaint-type \
 medians and are more reliable than a cross-type aggregate.
 {heatmap_json}
 
-FINDING 3 — Monthly P90 response time by quintile (raw hours, pooled complaints per month):
+FINDING 3 -- Monthly P90 response time by quintile (raw hours, pooled complaints per month):
 This is a volume-weighted trend across all complaint types. It shows whether service speed \
-has improved or worsened over time by income group. It is NOT an equity-gap series — it \
+has improved or worsened over time by income group. It is NOT an equity-gap series -- it \
 inherits the complaint-mix confound. Label it as a response-time trend, not an equity gap. \
 Look for COVID-era disruption (2020-2021), seasonal patterns, and long-run direction.
 {trend_json}
@@ -1117,22 +1027,22 @@ High-volume + high-gap (from confirmed gaps above) = most urgent. \
 High-volume + low or negative gap = agency performing equitably under pressure.
 {top_complaints_json}
 
-SLOWEST COMPLAINT TYPES PER BOROUGH — top 3 by median P90 (500+ requests only):
+SLOWEST COMPLAINT TYPES PER BOROUGH -- top 3 by median P90 (500+ requests only):
 {borough_complaint_json}
 
-AGENCY BREAKDOWN — total requests, Q1 median equity, Q5 median equity, gap:
+AGENCY BREAKDOWN -- total requests, Q1 median equity, Q5 median equity, gap:
 {agency_json}
 
 Produce your full analysis following the framework in your instructions. \
 Ground every claim in the confirmed gap numbers above. \
-Do not cite aggregate Q1-vs-Q5 equity scores — they are confounded and not provided.\
+Do not cite aggregate Q1-vs-Q5 equity scores -- they are confounded and not provided.\
 """
         if _dev:
             st.info("No AI synthesis cached for this data + sort combination.")
             if st.button("Generate AI Analysis", type="primary"):
                 claimed = _claim_slot(data_hash)
                 if claimed:
-                    with st.spinner("Generating…"):
+                    with st.spinner("Generating..."):
                         try:
                             text = _call_groq(prompt)
                             _store_synthesis(data_hash, text)
