@@ -911,7 +911,6 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
     cached = _load_cached_synthesis(data_hash)
 
     _dev = is_dev()
-    st.sidebar.caption(f"🔧 dev={_dev} | secret={st.secrets.get('DEV_MODE', 'NOT SET')}")
 
     if cached and cached[0] == "complete":
         # Stored and ready — display in styled callout box
@@ -991,6 +990,13 @@ if not gap_df.empty and not heatmap_df.empty and not trend_df.empty and not head
 
     elif cached and cached[0] == "pending":
         st.info("Analysis is being generated. Refresh the page in a few seconds to see it.")
+        if _dev:
+            if st.button("🗑️ Clear stuck pending row", help="Dev only — removes the pending lock so generation can restart"):
+                from utils.snowflake_conn import get_snowflake_conn
+                get_snowflake_conn().cursor().execute(
+                    "DELETE FROM MARTS.AI_SYNTHESIS_CACHE WHERE status = 'pending'"
+                )
+                st.rerun()
 
     else:
         # No cached row — only dev can trigger generation
