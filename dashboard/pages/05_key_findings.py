@@ -24,11 +24,36 @@ _chart_config = {"displayModeBar": True, "displaylogo": False,
 
 # ── Claude synthesis ──────────────────────────────────────────────────────────
 _SYNTHESIS_SYSTEM = """\
-You are a senior urban policy analyst and data scientist embedded with NYC's Office of \
-Operations. You have deep expertise in municipal service delivery, 311 complaint systems, \
-NYC agency structure, and the socioeconomic geography of the five boroughs. You understand \
-how equity scores are calculated (tract P90 divided by the median of all tract P90s citywide), \
-what drives response time at the agency level, and how external events shape service delivery.
+You are a plain-language chart narrator for a public 311 service-equity dashboard. \
+Your sole role is to describe what each data visualization shows in clear, accessible \
+language for a non-technical audience. You do not draw equity conclusions, make policy \
+recommendations, or assess whether income-based inequity exists — those conclusions are \
+provided to you as locked verified findings and you must restate them exactly as written \
+without extension or interpretation.
+
+LOCKED VERIFIED FINDINGS — restate these exactly, do not modify, extend, or contradict:
+1. At the median, 311 response time is equal across income quintiles citywide (P50 8-10 hrs all quintiles).
+2. The real gap is within complaint type: NYPD noise complaints resolve 1.5-2x slower in Q1 tracts \
+(Q1 median tract P90 3-4 hrs vs Q5 2 hrs), consistent across four categories, 1.7M+ Q1 requests.
+3. DOT street-sign repairs: Q1 median P90 = 174 days vs Q5 = 37 days (4.7x), lower volume (n=535).
+4. The aggregate Q1>Q5 claim is a complaint-mix confound. Helicopter noise: identical P90 in both \
+quintiles (~26,600 hrs), Q5 files it 62x more. The aggregate gap is a volume-composition artifact.
+5. Both quintiles have idiosyncratic slow tails. Cross-quintile aggregates are uninformative.
+6. An initial 3.7x Real Time Enforcement finding was invalidated — Q5 lacked sufficient volume for \
+a defensible comparison.
+7. Equity is only answerable within complaint type.
+
+HARD PROHIBITIONS — violating any of these makes the output unusable:
+- Never state that low-income neighborhoods wait longer overall or on average.
+- Never describe the monthly trend as an equity gap — call it a response-time trend.
+- Never attribute a complaint type's slowness to the neighborhood that files it without \
+  confirming the P90 is different between quintiles for that specific type.
+- Never compute, infer, or state any ratio or direction not explicitly provided in the input.
+- Never contradict, qualify, or extend the seven locked findings above.
+
+FORMAT: one short paragraph per chart/finding, plain English, no jargon, no markdown headers. \
+Total response under 400 words.\
+"""
 
 You will receive a comprehensive dataset from a 311 service equity dashboard covering NYC \
 from January 2020 to the present. Your job is to produce a rigorous, multi-dimensional \
@@ -277,7 +302,7 @@ def _call_groq(prompt: str) -> str:
             {"role": "system", "content": _SYNTHESIS_SYSTEM},
             {"role": "user",   "content": prompt},
         ],
-        max_tokens=1500,
+        max_tokens=600,
     )
     return response.choices[0].message.content
 
@@ -773,12 +798,56 @@ else:
 
 st.divider()
 
-# ── AI synthesis ──────────────────────────────────────────────────────────────
+# ── ④ Verified findings — static, human-written, cannot drift ─────────────────
+st.subheader("④ Verified Findings")
+st.caption("Human-written and locked to the numbers in the charts above. These are the only claims this dashboard makes.")
+st.markdown("""
+**① At the median, response time is equal across income quintiles citywide.**
+P50 response time is 8–10 hours across all five income quintiles. For the typical 311
+complaint, low-income and high-income neighborhoods resolve at the same speed.
+
+**② The real gap is within complaint type, not across them — NYPD noise is the headline.**
+NYPD takes 1.5–2× longer on noise complaints in low-income tracts (Q1 median tract P90:
+3–4 hrs vs Q5: 2 hrs), consistent across four independent categories — Noise Residential,
+Street/Sidewalk, Vehicle, and Commercial — covering 1.7M+ low-income-tract requests.
+Consistency across four categories handled by the same agency is more convincing than any
+single large number.
+
+**③ DOT street-sign repairs show the largest gap but at lower volume.**
+Q1 median tract P90 = 174 days vs Q5 = 37 days (4.7×). Q1 n = 535 complaints — the gap
+is statistically supported but carries less confidence than the noise cluster.
+
+**④ The aggregate "low-income waits longer" claim is confounded by complaint mix.**
+When all complaint types are pooled, Q5 P90 actually exceeds Q1 P90 (813 hrs vs 474 hrs).
+This inverts because Q5 tracts file structurally slow, often unresolvable complaint types
+at far higher rates — helicopter noise is filed 62× more often by Q5 than Q1, with
+identical P90s in both quintiles (~26,600 hrs). The aggregate gap is a volume-composition
+artifact, not a service-quality signal.
+
+**⑤ Both quintiles have their own idiosyncratic slow tails.**
+Q1's tail is dominated by Smoking enforcement (P90 = 35,525 hrs) and Mobile Food Vendor
+complaints. Q5's by helicopter noise and tree planting requests. Both tails reflect
+structural unresolvability, not income-based inequity. Cross-quintile aggregates are
+uninformative in either direction.
+
+**⑥ One early finding did not survive the corrected methodology.**
+An initial finding of a 3.7× Real Time Enforcement gap was invalidated when the method
+required both quintiles to clear a 500-complaint volume floor. Q5 tracts rarely file
+Real Time Enforcement complaints, so no defensible Q5 baseline exists.
+
+**⑦ Equity is only answerable within complaint type.**
+Hold the complaint type constant, compare Q1 vs Q5 median tract P90. The noise cluster
+holds at that grain. Aggregate comparisons do not.
+""")
+
+st.divider()
+
+# ── ⑤ AI chart narration — description only, findings locked ──────────────────
 import streamlit.components.v1 as _components
 
 _h_col, _btn_col = st.columns([5, 2.6])
-_h_col.subheader("④ What the data tells us — and what should happen next")
-_h_col.caption("AI-generated synthesis stored in Snowflake. Groq is called only once per data refresh.")
+_h_col.subheader("⑤ AI Chart Narration")
+_h_col.caption("Plain-language description of the charts above. Findings are locked — the AI restates, does not interpret.")
 # _btn_col is filled below once synthesis is confirmed cached and complete
 
 # Extra context from other dashboard pages fed into Groq
